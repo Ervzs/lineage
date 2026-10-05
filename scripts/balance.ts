@@ -1,29 +1,34 @@
-// npm run balance — simulates full runs with a bot and checks the balance laws (PLAN.md section 20).
+// npm run balance — simulates full runs with a bot and checks the balance laws (PLAN.md sections 20 and 26).
 import { writeFileSync } from 'node:fs'
-import { BALANCE_CEILING, EVO_NEEDED, GENOME_FACTOR, THREAT_LEVEL } from '../src/data/constants'
+import { BALANCE_CEILING, EVO_NEEDED, GENOME_FACTOR, RESISTS } from '../src/data/constants'
 import { EVENT_BY_ID, EVENTS } from '../src/data/events'
+import { FOSSIL_UPGRADES } from '../src/data/fossilUpgrades'
 import { GENOME_NODES } from '../src/data/genomeNodes'
 import { RARITIES } from '../src/data/mutations'
 import { SPECIES } from '../src/data/species'
 import { TRAITS, traitId } from '../src/data/traits'
-import { buyCount, producerCost, traitCost } from '../src/engine/costs'
-import { canBuyTrait } from '../src/engine/evolution'
+import { buyCount, levelCost, producerCost, traitCost } from '../src/engine/costs'
+import { canBuyTrait, canLevelTrait, traitOwned, traitUnlocked } from '../src/engine/evolution'
 import { fmt, fmtTime } from '../src/engine/format'
 import { canBuyNode } from '../src/engine/genome'
 import { computeMods, type Mods } from '../src/engine/modifiers'
 import { giftCheck, rarityOdds, rollRarity } from '../src/engine/mutations'
 import { totalIncome } from '../src/engine/production'
+import { upcomingThreat } from '../src/engine/reckoning'
+import { canBuyUpgrade, fossilsForRun } from '../src/engine/rebirth'
 import { gameReducer } from '../src/engine/reducer'
-import { activeIndex, initialState } from '../src/engine/state'
-import type { Branch, EventOption, GameState } from '../src/engine/types'
+import { activeIndex, initialState, newestBorn } from '../src/engine/state'
+import type { Branch, EventOption, GameState, Resist } from '../src/engine/types'
 
 const STEP = 0.5
-const MAX_TIME = 12 * 3600
+const MAX_TIME = 24 * 3600
 const CLICKS_PER_SECOND = 4
+const RESERVE_SECONDS = 30
+const SEED = 12345
 
 // ---------- policies ----------
 
-interface Policy { name: string; order: [Branch, number][]; oldBranches: Branch[] }
+interface Policy { name: string; order: [Branch, number][]; oldBranches: Branch[]; prepares: boolean }
 
 const seq = (branches: Branch[]): [Branch, number][] => branches.flatMap(b => [1, 2, 3].map(t => [b, t] as [Branch, number]))
 
@@ -32,10 +37,12 @@ const POLICIES: Policy[] = [
     name: 'balanced',
     order: [1, 2, 3].flatMap(t => (['growth', 'survival', 'cunning'] as Branch[]).map(b => [b, t] as [Branch, number])),
     oldBranches: ['growth', 'survival', 'cunning'],
+    prepares: true,
   },
-  { name: 'growth-only', order: seq(['growth', 'cunning', 'survival']), oldBranches: ['growth', 'cunning'] },
-  { name: 'survival-first', order: seq(['survival', 'growth', 'cunning']), oldBranches: ['survival', 'growth', 'cunning'] },
-  { name: 'cunning-first', order: seq(['cunning', 'growth', 'survival']), oldBranches: ['cunning', 'growth', 'survival'] },
+  // Ignores Threats: buys Survival only for evolution points, never prepares.
+  { name: 'growth-only', order: seq(['growth', 'cunning', 'survival']), oldBranches: ['growth', 'cunning'], prepares: false },
+  { name: 'survival-first', order: seq(['survival', 'growth', 'cunning']), oldBranches: ['survival', 'growth', 'cunning'], prepares: true },
+  { name: 'cunning-first', order: seq(['cunning', 'growth', 'survival']), oldBranches: ['cunning', 'growth', 'survival'], prepares: true },
 ]
 
 // ---------- event valuation (production-seconds) ----------
@@ -69,21 +76,24 @@ interface SpeciesReport {
 interface RunReport {
   policy: string
   answer: 'default' | 'best'
+  epoch: number
   ending: string
+  diedAt: string
   time: number
   maxBiomass: number
   genomeEarned: number
-  defense: number
-  defenseParts: string
+  fossils: number
+  resistAtThreat: string
   species: SpeciesReport[]
   peak: number[]
   genomeBySpecies: number[]
-  defenseBySpecies: number[]
   longestWait: number
   longestWaitAt: number
   ratios: number[]
   badNumber: boolean
   mutations: number
+  levels: number
+  end: GameState
 }
 
 function nextTrait(s: GameState, k: number, p: Policy): string | null {
@@ -100,17 +110,34 @@ function nextTrait(s: GameState, k: number, p: Policy): string | null {
 }
 
 // Seconds until a producer pays for itself (tier 2 and 3 grow polynomially).
-function payback(s: GameState, m: Mods, k: number, tier: number, income: number): number {
+function payback(s: GameState, m: Mods, k: number, tier: number): number {
   const def = SPECIES[k].producers[tier]
   const cost = producerCost(def, s.species[k].producers[tier].bought)
-  const perT1 = SPECIES[k].producers[0].baseRate * m.tierMult[k][0] * (income > 0 ? (1 + m.chainBonus[k]) * (1 + m.productionBonus) * m.health : 1)
+  const perT1 = SPECIES[k].producers[0].baseRate * m.tierMult[k][0] * (1 + m.chainBonus[k]) * (1 + m.productionBonus) * m.fossilMult * m.health
+  const r2 = SPECIES[k].producers[1].baseRate * m.tierMult[k][1]
+  const r3 = SPECIES[k].producers[2].baseRate * m.tierMult[k][2]
   if (tier === 0) return cost / perT1
-  if (tier === 1) return Math.sqrt(cost / (0.05 * m.tierMult[k][1] * perT1))
-  return Math.cbrt(6 * cost / (0.01 * m.tierMult[k][1] * m.tierMult[k][2] * perT1))
+  if (tier === 1) return Math.sqrt(2 * cost / (r2 * perT1))
+  return Math.cbrt(6 * cost / (r2 * r3 * perT1))
 }
 
-function simulate(policy: Policy, answer: 'default' | 'best', seed: number): RunReport {
-  let s = initialState(seed)
+// Requirements the bot is preparing for right now: the active Threat, or the one announced for this era.
+// Early in an era it only spends up to half its Biomass on preparation.
+function targetRequirements(s: GameState, k: number): { req: Partial<Record<Resist, number>>; budget: number } | null {
+  if (s.threat && !s.threat.resolved) return { req: s.threat.requirements, budget: 1 }
+  if (k < 0 || k >= SPECIES.length - 1) return null
+  const next = upcomingThreat(s, k)
+  if (!next) return null
+  return { req: next.requirements, budget: s.species[k].evoPoints / EVO_NEEDED < 0.5 ? 0.5 : 1 }
+}
+
+const resistOf = (id: string): Resist | null => {
+  const e = TRAITS.find(t => t.id === id)!.effects[0]
+  return e.target.startsWith('resist.') ? (e.target.slice(7) as Resist) : null
+}
+
+function simulate(policy: Policy, answer: 'default' | 'best', seed: number, start?: GameState): RunReport {
+  let s = start ?? initialState(seed)
   const species: SpeciesReport[] = SPECIES.map(() => ({ meterAt: [null, null, null, null], bornAt: null, biomassAtBirth: 0, incomeAtBirth: 0, oldSurvivalCost: [] }))
   species[0].bornAt = 0
   let maxBiomass = 0
@@ -120,15 +147,25 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
   const ratios: number[] = []
   let badNumber = false
   let seenEvents = 0
-  let defenseAtImpact = 0
+  let levels = 0
+  let resistAtThreat = ''
 
   const bought = () => {
     const wait = s.playTime - lastBuy
-    if (wait > longestWait && !s.reckoning?.resolved) {
+    if (wait > longestWait && !s.threat?.resolved) {
       longestWait = wait
       longestWaitAt = lastBuy
     }
     lastBuy = s.playTime
+  }
+  const buyTrait = (id: string) => {
+    s = gameReducer(s, { type: 'BUY_TRAIT', traitId: id })
+    bought()
+  }
+  const levelTrait = (id: string) => {
+    s = gameReducer(s, { type: 'LEVEL_TRAIT', traitId: id })
+    levels++
+    bought()
   }
 
   while (!s.ending && s.playTime < MAX_TIME) {
@@ -155,18 +192,46 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
     }
 
     const k = activeIndex(s)
-    const inReckoning = !!s.reckoning && !s.reckoning.resolved
+    const inThreat = !!s.threat && !s.threat.resolved
+
+    // Prepare for the Threat: cheapest Survival Trait or level that raises a missing resistance.
+    const prep = policy.prepares ? targetRequirements(s, k) : null
+    let prepReserve = 0
+    if (prep) {
+      const req = prep.req
+      for (let guard = 0; guard < 50; guard++) {
+        m = computeMods(s)
+        const short = RESISTS.filter(r => req[r] !== undefined && m.resist[r] < req[r]!)
+        if (!short.length) break
+        const options = TRAITS.filter(t => short.includes(resistOf(t.id)!) && s.species[t.species].status !== 'locked')
+          .map(t => traitOwned(s, t.id) ? { id: t.id, cost: levelCost(s, t), level: true }
+            : traitUnlocked(s, t.id) ? { id: t.id, cost: traitCost(s, t), level: false } : null)
+          .filter((x): x is { id: string; cost: number; level: boolean } => !!x)
+          .sort((a, b) => a.cost - b.cost)
+        if (!options.length) break
+        if (options[0].cost > s.biomass * prep.budget) {
+          // Save for it once the Threat is close (or running) and the cost is within reach.
+          if (prep.budget === 1 && options[0].cost <= Math.max(income, 1) * 600) prepReserve = options[0].cost
+          break
+        }
+        if (options[0].level) levelTrait(options[0].id)
+        else buyTrait(options[0].id)
+      }
+    }
 
     // Traits of the active species, in policy order.
     let target: string | null = null
-    if (k >= 0) {
+    if (k >= 0 && s.species[k].evoPoints < EVO_NEEDED) {
       for (let guard = 0; guard < 9; guard++) {
         const id = nextTrait(s, k, policy)
         if (!id) break
+        // A careful player holds back the Trait that would start the era Threat until ready.
+        const completes = s.species[k].evoPoints + TRAITS.find(x => x.id === id)!.evoPoints >= EVO_NEEDED
+        const ready = !prep || RESISTS.every(r => prep.req[r] === undefined || computeMods(s).resist[r] >= prep.req[r]!)
+        if (completes && !ready) break
         if (canBuyTrait(s, id)) {
-          s = gameReducer(s, { type: 'BUY_TRAIT', traitId: id })
-          bought()
-          if (activeIndex(s) !== k) break
+          buyTrait(id)
+          if (activeIndex(s) !== k || s.threat) break
         } else {
           target = id
           break
@@ -174,16 +239,18 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
       }
     }
 
-    // Traits of old species: cheap ones once the new species produces, or anything during the Reckoning.
+    // Old Traits once the new species produces, and Growth levels of the active species, when cheap.
     const started = k >= 0 && s.species[k].producers[0].bought > 0
-    for (const t of TRAITS) {
-      if (!started && !inReckoning) break
-      if (s.species[t.species].status === 'active' || !policy.oldBranches.includes(t.branch)) continue
-      if (!canBuyTrait(s, t.id)) continue
-      const cost = traitCost(s, t)
-      if (inReckoning || cost <= s.biomass * 0.25) {
-        s = gameReducer(s, { type: 'BUY_TRAIT', traitId: t.id })
-        bought()
+    if ((started || inThreat) && !prepReserve) {
+      for (const t of TRAITS) {
+        if (s.species[t.species].status === 'active' || !policy.oldBranches.includes(t.branch)) continue
+        if (canBuyTrait(s, t.id) && traitCost(s, t) <= s.biomass * 0.25) buyTrait(t.id)
+      }
+      if (k >= 0) {
+        for (const t of TRAITS) {
+          if (t.species !== k || t.branch !== 'growth') continue
+          if (canLevelTrait(s, t.id) && levelCost(s, t) <= s.biomass * 0.25) levelTrait(t.id)
+        }
       }
     }
 
@@ -194,14 +261,14 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
         m = computeMods(s)
         income = totalIncome(s, m)
         const tCost = target && s.species[k2].status === 'active' ? traitCost(s, TRAITS.find(x => x.id === target)!) : Infinity
-        const reserve = tCost <= Math.max(income, 1) * 30 ? tCost : 0
+        const reserve = Math.max(prepReserve, tCost <= Math.max(income, 1) * RESERVE_SECONDS ? tCost : 0)
         let best = -1
         let bestPay = Infinity
         for (const tier of [0, 1, 2]) {
           const def = SPECIES[k2].producers[tier]
           const cost = producerCost(def, s.species[k2].producers[tier].bought)
           if (s.biomass - cost < reserve) continue
-          const pb = payback(s, m, k2, tier, income)
+          const pb = payback(s, m, k2, tier)
           if (pb < bestPay) {
             bestPay = pb
             best = tier
@@ -216,10 +283,13 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
       }
     }
 
-    const wasPending = !!s.reckoning && !s.reckoning.resolved
-    const before = computeMods(s).defense
+    const pending = s.threat && !s.threat.resolved ? s.threat : null
+    const resistBefore = computeMods(s).resist
     s = gameReducer(s, { type: 'TICK', dt: STEP })
-    if (wasPending && s.reckoning?.resolved) defenseAtImpact = before
+    if (pending && pending.kind === 'final' && s.threat?.resolved !== false) {
+      resistAtThreat = RESISTS.filter(r => pending.requirements[r] !== undefined)
+        .map(r => `${r} ${resistBefore[r]}/${pending.requirements[r]}`).join(', ')
+    }
 
     // Bookkeeping.
     maxBiomass = Math.max(maxBiomass, s.biomass)
@@ -232,8 +302,7 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
     })
     const nowActive = activeIndex(s)
     if (nowActive !== prevActive && nowActive > 0 && species[nowActive].bornAt === null) {
-      const mm = computeMods(s)
-      const inc = totalIncome(s, mm)
+      const inc = totalIncome(s, computeMods(s))
       species[nowActive].bornAt = s.playTime
       species[nowActive].biomassAtBirth = s.biomass
       species[nowActive].incomeAtBirth = inc
@@ -244,30 +313,49 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
     }
   }
 
-  const m = computeMods(s)
-  const defenseBySpecies = s.species.map(sp => sp.traitsBought.reduce((sum, id) => {
-    const t = TRAITS.find(x => x.id === id)!
-    return sum + t.effects.filter(e => e.target === 'defense.flat').reduce((a, e) => a + e.value, 0)
-  }, 0))
+  const diedAt = s.ending === 'extinct' && s.threat?.kind === 'era' ? `${SPECIES[s.threat.species].name} era` : s.ending === 'extinct' ? 'Reckoning' : '-'
   return {
     policy: policy.name,
     answer,
-    ending: s.ending ?? (s.reckoning?.resolved ? 'extinct (fading)' : 'none'),
+    epoch: s.meta.epoch,
+    ending: s.ending ?? 'none',
+    diedAt,
     time: s.playTime,
     maxBiomass,
     genomeEarned: s.genomeEarned,
-    defense: defenseAtImpact,
-    defenseParts: `traits ${m.defenseTraits} + genome ${m.defenseGenome} + mutations ${m.defenseMutations}`,
+    fossils: s.ending ? fossilsForRun(s) : 0,
+    resistAtThreat,
     species,
     peak: s.species.map(sp => sp.peakPopulation),
     genomeBySpecies: s.species.map(sp => (sp.genomePaid ? Math.round(GENOME_FACTOR * Math.log10(Math.max(sp.peakPopulation, 1))) : 0)),
-    defenseBySpecies,
     longestWait,
     longestWaitAt,
     ratios,
     badNumber,
     mutations: s.mutations.length,
+    levels,
+    end: s,
   }
+}
+
+// Epochs 1..n for one policy: rebirth after each ending, Fossil upgrades cheapest first.
+function simulateEpochs(policy: Policy, seed: number, n: number): RunReport[] {
+  const out: RunReport[] = []
+  let start: GameState | undefined
+  for (let e = 0; e < n; e++) {
+    const r = simulate(policy, 'default', seed + e, start)
+    out.push(r)
+    if (!r.end.ending) break
+    let s = gameReducer(r.end, { type: 'REBIRTH' })
+    for (let guard = 0; guard < 200; guard++) {
+      const next = FOSSIL_UPGRADES.filter(u => canBuyUpgrade(s, u.id))
+        .sort((a, b) => a.baseCost * a.growth ** (s.meta.upgrades[a.id] ?? 0) - b.baseCost * b.growth ** (s.meta.upgrades[b.id] ?? 0))[0]
+      if (!next) break
+      s = gameReducer(s, { type: 'BUY_FOSSIL_UPGRADE', id: next.id })
+    }
+    start = s
+  }
+  return out
 }
 
 // ---------- report ----------
@@ -280,26 +368,26 @@ const line = (t = '') => {
 const t = (x: number | null) => (x === null ? '-' : fmtTime(x))
 
 const runs: RunReport[] = []
-for (const p of POLICIES) runs.push(simulate(p, 'default', 12345))
-runs.push(simulate(POLICIES[0], 'best', 12345))
+for (const p of POLICIES) runs.push(simulate(p, 'default', SEED))
+runs.push(simulate(POLICIES[0], 'best', SEED))
 
 line('# Lineage balance report')
 line()
-line('Bot: buys producers by payback, Traits by policy, Genome nodes cheapest first. Events answered at once.')
-line(`Threat level ${THREAT_LEVEL}. Simulation step ${STEP} s. Seed 12345.`)
+line('Bot: buys producers by payback, Traits by policy, Genome nodes cheapest first, and prepares Survival Traits for each Threat (except growth-only). Events answered at once.')
+line(`Simulation step ${STEP} s. Seed ${SEED}.`)
 
 for (const r of runs) {
   line()
   line(`## ${r.policy} (events: ${r.answer})`)
   line()
-  line(`Ending: ${r.ending} after ${fmtTime(r.time)}. Defense at impact ${r.defense} (final: ${r.defenseParts}). Genome earned ${r.genomeEarned}. Mutations ${r.mutations}. Max Biomass ${fmt(r.maxBiomass)}.`)
+  line(`Ending: ${r.ending} after ${fmtTime(r.time)}${r.diedAt !== '-' ? ` (lost at the ${r.diedAt})` : ''}. Final Threat: ${r.resistAtThreat || '-'}. Genome earned ${r.genomeEarned}. Fossils ${r.fossils}. Mutations ${r.mutations}. Trait levels ${r.levels}. Max Biomass ${fmt(r.maxBiomass)}.`)
   line(`Longest wait between purchases: ${fmtTime(r.longestWait)} (from ${fmtTime(r.longestWaitAt)}).`)
   line()
-  line('| Species | Born | 25% | 50% | 75% | 100% | Biomass at birth | Income at birth | Anchor ratio | Peak pop | Genome | Defense |')
-  line('|---|---|---|---|---|---|---|---|---|---|---|---|')
+  line('| Species | Born | 25% | 50% | 75% | 100% | Biomass at birth | Income at birth | Anchor ratio | Peak pop | Genome |')
+  line('|---|---|---|---|---|---|---|---|---|---|---|')
   r.species.forEach((sp, i) => {
     const ratio = sp.incomeAtBirth > 0 ? `${(SPECIES[i].anchor / sp.incomeAtBirth / 60).toFixed(2)} min` : '-'
-    line(`| ${SPECIES[i].name} | ${t(sp.bornAt)} | ${sp.meterAt.map(t).join(' | ')} | ${fmt(sp.biomassAtBirth)} | ${fmt(sp.incomeAtBirth)}/s | ${ratio} | ${fmt(r.peak[i])} | ${r.genomeBySpecies[i]} | ${r.defenseBySpecies[i]} |`)
+    line(`| ${SPECIES[i].name} | ${t(sp.bornAt)} | ${sp.meterAt.map(t).join(' | ')} | ${fmt(sp.biomassAtBirth)} | ${fmt(sp.incomeAtBirth)}/s | ${ratio} | ${fmt(r.peak[i])} | ${r.genomeBySpecies[i]} |`)
   })
 }
 
@@ -307,17 +395,18 @@ for (const r of runs) {
 
 const results: [string, boolean | null, string][] = []
 const balanced = runs[0]
+const growth = runs.find(r => r.policy === 'growth-only')!
 
 results.push(['1. No NaN or Infinity', !runs.some(r => r.badNumber), ''])
 const maxB = Math.max(...runs.map(r => r.maxBiomass))
 results.push(['2. Biomass maximum below 1e66', maxB < BALANCE_CEILING, `max ${fmt(maxB)}`])
-const growth = runs.find(r => r.policy === 'growth-only')!
-results.push(['3. balanced survives, growth-only fails', balanced.ending === 'survived' && growth.ending !== 'survived',
-  `balanced: ${balanced.ending} (defense ${balanced.defense}), growth-only: ${growth.ending} (defense ${growth.defense})`])
+results.push(['3. balanced survives every Threat, growth-only does not', balanced.ending === 'survived' && growth.ending !== 'survived',
+  `balanced: ${balanced.ending}, growth-only: ${growth.ending}${growth.diedAt !== '-' ? ` at the ${growth.diedAt}` : ''}`])
 
-const anchorRatios = balanced.species.slice(1).map((sp, i) => SPECIES[i + 1].anchor / sp.incomeAtBirth / 60)
-results.push(['4. Anchor ratio between 1 and 4 minutes', anchorRatios.every(x => x >= 1 && x <= 4),
-  anchorRatios.map(x => (Number.isFinite(x) ? x.toFixed(2) : '-')).join(', ')])
+const seedRuns = [balanced, simulate(POLICIES[0], 'default', 1), simulate(POLICIES[0], 'default', 2)]
+const anchorRatios = seedRuns.map(r => r.species.slice(1).map((sp, i) => SPECIES[i + 1].anchor / sp.incomeAtBirth / 60))
+results.push(['4. Anchor ratio between 1 and 4 minutes (3 seeds)', anchorRatios.every(rs => rs.every(x => x >= 1 && x <= 4)),
+  anchorRatios.map(rs => rs.map(x => (Number.isFinite(x) ? x.toFixed(1) : '-')).join(' ')).join(' | ')])
 
 const nodeCost = GENOME_NODES.reduce((a, n) => a + n.cost, 0)
 const gPct = balanced.genomeEarned / nodeCost
@@ -365,7 +454,13 @@ results.push(['8. Longest wait for next purchase (report)', null, `balanced ${fm
 const late = balanced.species.map((sp, i) => sp.oldSurvivalCost.length
   ? `${SPECIES[i].name} birth: ${sp.oldSurvivalCost.map(c => `${SPECIES[c.species].name} ${fmtTime(c.seconds)}`).join(', ')}`
   : '').filter(Boolean)
-results.push(['9. Late adaptation cost (report)', null, 'old Survival branch cost in income-seconds'])
+results.push(['9. Late adaptation cost (report)', null, 'old Survival branch cost in income-seconds, below'])
+
+const times = seedRuns.map(r => r.time)
+results.push(['10. First run takes the bot 3-5 hours (3 seeds)', times.every(x => x >= 3 * 3600 && x <= 5 * 3600), times.map(fmtTime).join(', ')])
+
+const epochs = simulateEpochs(POLICIES[0], SEED, 12)
+results.push(['11. Runs 1-12, balanced bot with Fossil upgrades (report)', null, 'below'])
 
 line()
 line('## Checks')
@@ -375,5 +470,18 @@ line()
 line('### Late adaptation cost (balanced)')
 line()
 for (const l of late) line(`- ${l}`)
+line()
+line('### Epochs (balanced)')
+line()
+line('| Epoch | Ending | Lost at | Time | Furthest species | Fossils earned | Fossil upgrades after |')
+line('|---|---|---|---|---|---|---|')
+let total = 0
+for (const r of epochs) {
+  total += r.time
+  const ups = Object.entries(r.end.meta.upgrades).map(([id, lv]) => `${id} ${lv}`).join(', ') || '-'
+  line(`| ${r.epoch} | ${r.ending} | ${r.diedAt} | ${fmtTime(r.time)} | ${SPECIES[newestBorn(r.end)].name} | ${r.fossils} | ${ups} |`)
+}
+line()
+line(`Total bot time over ${epochs.length} Epochs: ${fmtTime(total)}.`)
 
 writeFileSync('balance-report.md', out.join('\n') + '\n')
