@@ -21,22 +21,21 @@ function describe(option: EventOption, m: Mods): string {
   return outs.map(o => `${Math.round(o.chance * 100)}% ${effects(o, m)}`).join(' / ')
 }
 
-interface Props { eventId: string; remaining: number; mods: Mods; onResolve: (optionId: string) => void }
+interface Props { eventId: string; mods: Mods; onResolve: (optionId: string) => void }
 
-export const EventCard = memo(function EventCard({ eventId, remaining, mods, onResolve }: Props) {
+export const EventCard = memo(function EventCard({ eventId, mods, onResolve }: Props) {
   const def = EVENT_BY_ID[eventId]
-  const tone = def.kind === 'loss' ? 'loss' : 'accent'
   return (
-    <section className={`panel event event-${def.kind}`} aria-live="polite">
-      <div className="spread">
-        <h2 className={`event-name ${tone}`}>{def.name}</h2>
-        <span className="muted small">answer in {Math.ceil(remaining)} s</span>
+    <section className={`band event-band${def.kind === 'boost' ? ' boost' : ''}`} aria-live="polite">
+      <div className="band-head">
+        <h2 className="band-title">{def.name}</h2>
+        <span className="muted small">answer soon, or the safe choice is made</span>
       </div>
-      <p className="muted">{def.flavor}</p>
+      <p className="band-text">{def.flavor}</p>
       <div className="event-options">
         {def.options.map(o => (
-          <button key={o.id} className={`event-option ${tone}`} onClick={() => onResolve(o.id)}>
-            <span className="event-label">{o.label}{o.id === def.defaultOptionId ? ' (auto)' : ''}</span>
+          <button key={o.id} className="event-option" onClick={() => onResolve(o.id)}>
+            <span className="event-label">{o.label}{o.id === def.defaultOptionId ? ' (safe)' : ''}</span>
             <span className="event-effect">{describe(o, mods)}</span>
           </button>
         ))}

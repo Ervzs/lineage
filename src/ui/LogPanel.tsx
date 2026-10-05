@@ -1,18 +1,30 @@
-import { memo } from 'react'
+import { memo, useState } from 'react'
 import { fmtTime } from '../engine/format'
 import type { LogEntry } from '../engine/types'
 
+// Gift lines are logged as 'system'; color them on their own.
+const kindOf = (e: LogEntry) => (e.text.startsWith('Gifted:') ? 'gift' : e.kind)
+
+// The Chronicle: always open. A side rail on wide screens, a bottom strip on phones.
 export const LogPanel = memo(function LogPanel({ log }: { log: LogEntry[] }) {
+  const [open, setOpen] = useState(false)
   return (
-    <section className="panel">
-      <ol className="plain-list log">
+    <aside className={open ? 'chronicle open' : 'chronicle'} aria-label="Chronicle">
+      <div className="chronicle-head">
+        <h2 className="chronicle-title">Chronicle</h2>
+        <button className="chronicle-toggle ghost" onClick={() => setOpen(o => !o)} aria-expanded={open}>
+          {open ? 'collapse' : 'expand'}
+        </button>
+      </div>
+      <p className="chronicle-hint">Everything that happens, newest first.</p>
+      <ol className="plain-list" aria-live="polite">
         {log.map((e, i) => (
-          <li key={log.length - i} className={`log-row log-${e.kind}`}>
-            <span className="muted small log-time">{fmtTime(e.t)}</span>
+          <li key={log.length - i} className={`entry entry-${kindOf(e)}${i === 0 ? ' entry-new' : ''}`}>
+            <time>{fmtTime(e.t)}</time>
             <span>{e.text}</span>
           </li>
         ))}
       </ol>
-    </section>
+    </aside>
   )
 })

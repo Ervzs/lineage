@@ -44,6 +44,14 @@ export function threatText(t: Threat): string {
   return t.kind === 'era' ? eraThreatFor(t.species)!.text : THREAT_BY_ID[t.id].text
 }
 
+// How close impact is, without exact numbers: the UI shows no timer.
+export type ThreatStage = 'distant' | 'approaching' | 'imminent'
+
+export function threatStage(t: Threat): ThreatStage {
+  const left = t.countdown / (t.kind === 'era' ? ERA_COUNTDOWN : THREAT_COUNTDOWN)
+  return left > 0.5 ? 'distant' : left > 0.15 ? 'approaching' : 'imminent'
+}
+
 export const missing = (t: Threat, m: Mods): Resist[] =>
   RESISTS.filter(r => t.requirements[r] !== undefined && m.resist[r] < t.requirements[r]!)
 

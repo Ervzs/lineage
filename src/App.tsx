@@ -5,7 +5,6 @@ import { computeMods } from './engine/modifiers'
 import { objectiveView } from './engine/objectives'
 import { totalPopulation } from './engine/population'
 import { totalIncome } from './engine/production'
-import { threatName } from './engine/reckoning'
 import { activeIndex } from './engine/state'
 import type { BuyMode } from './engine/types'
 import { EndScreen } from './ui/EndScreen'
@@ -36,9 +35,6 @@ function Game() {
   const income = totalIncome(s, m)
   const objective = objectiveView(s, m)
   const anyProducer = s.species.some(sp => sp.producers.some(p => p.bought > 0))
-  const threat = s.threat && !s.threat.resolved
-    ? { name: threatName(s.threat), countdown: s.threat.countdown, requirements: s.threat.requirements }
-    : null
 
   const onSave = useCallback(() => {
     saveNow(s)
@@ -96,11 +92,11 @@ function Game() {
   if (s.mutations.length) tabs.push('mutations')
   if (s.genomeEarned > 0) tabs.push('genome')
   if (s.meta.epoch > 1 || s.meta.fossilsEarned > 0) tabs.push('fossils')
-  tabs.push('log')
   const current = tabs.includes(tab) ? tab : 'species'
 
   return (
-    <main className="game">
+    <div className="layout">
+      <main className="game">
       <Header
         biomass={s.biomass}
         income={income}
@@ -113,7 +109,6 @@ function Game() {
         showRate={anyProducer}
         showGenome={s.genomeEarned > 0}
         showFossils={s.meta.epoch > 1 || s.meta.fossilsEarned > 0}
-        threat={threat}
         saved={saved}
         settingsOpen={settingsOpen}
         onSave={onSave}
@@ -121,15 +116,16 @@ function Game() {
       />
 
       {settingsOpen ? (
-        <SettingsPanel state={s} onImport={onImport} onReset={onReset} onMode={onMode} />
+        <div className="content"><SettingsPanel state={s} onImport={onImport} onReset={onReset} onMode={onMode} /></div>
       ) : s.ending ? (
-        <EndScreen state={s} onRebirth={onRebirth} />
+        <div className="content"><EndScreen state={s} onRebirth={onRebirth} /></div>
       ) : (
         <>
           {objective && <ObjectiveBar {...objective} />}
-          {s.activeEvent && <EventCard eventId={s.activeEvent.id} remaining={s.activeEvent.remaining} mods={m} onResolve={onResolve} />}
           {s.threat && <ThreatPanel threat={s.threat} resist={m.resist} />}
+          {s.activeEvent && <EventCard eventId={s.activeEvent.id} mods={m} onResolve={onResolve} />}
           <Tabs tabs={tabs} current={current} onSelect={setTab} />
+          <div className="content">
           {current === 'species' && <SpeciesPanel state={s} mods={m} onBuy={onBuy} onAbsorb={onAbsorb} onMode={onMode} />}
           {current === 'traits' && <TraitsPanel state={s} onBuy={onBuyTrait} onLevel={onLevelTrait} />}
           {current === 'lineage' && <LineagePanel state={s} />}
@@ -140,10 +136,12 @@ function Game() {
             <GenomePanel genome={s.genome} nodes={s.genomeNodes} resist={m.resistGenome} ended={!!s.ending} onBuy={onBuyNode} />
           )}
           {current === 'fossils' && <FossilsPanel state={s} onBuy={onBuyFossil} />}
-          {current === 'log' && <LogPanel log={s.log} />}
+          </div>
         </>
       )}
-    </main>
+      </main>
+      <LogPanel log={s.log} />
+    </div>
   )
 }
 

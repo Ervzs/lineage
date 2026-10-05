@@ -1,32 +1,44 @@
+/* Deep Time: each era is a rock stratum. */
 :root {
-  --bg: #0e0f11;
-  --panel: #15171a;
-  --line: #26292e;
-  --text: #d7d9dc;
-  --muted: #7b8088;
-  --accent: #6ee7b7;
-  --loss: #f87171;
+  --bg: #24211e;          /* basalt */
+  --surface: #302a24;     /* present-day band */
+  --panel: #3a342e;       /* shale */
+  --stratum: #54473a;     /* active stratum */
+  --stratum-old: #3a342e; /* older strata */
+  --line: rgba(239, 230, 212, 0.12);
+  --text: #efe6d4;        /* bone */
+  --muted: #b9ae99;
+  --accent: #d4a35c;      /* sandstone */
+  --good: #9cc27a;        /* moss */
+  --loss: #e2462d;        /* magma */
+  --loss-soft: #ffb3a3;
 
-  --r-common: #9aa0a6;
-  --r-uncommon: #4ade80;
-  --r-rare: #60a5fa;
-  --r-epic: #c084fc;
-  --r-legendary: #fbbf24;
-  --r-mythic: #fb7185;
+  --imm: #7fc7d9;
+  --tou: #d4a35c;
+  --end: #9cc27a;
 
-  --font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r-common: #b9ae99;
+  --r-uncommon: #9cc27a;
+  --r-rare: #7fc7d9;
+  --r-epic: #c49cff;
+  --r-legendary: #f2c14e;
+  --r-mythic: #ff7a90;
+
+  --sans: 'Space Grotesk', system-ui, sans-serif;
+  --mono: 'Space Mono', ui-monospace, monospace;
   --fs-base: 15px;
   --fs-small: 13px;
-  --fs-title: 18px;
-  --fs-stat: 20px;
-  --lh: 1.55;
+  --fs-title: 22px;
+  --fs-stat: 22px;
+  --lh: 1.5;
 
   --s1: 4px;
   --s2: 8px;
   --s3: 12px;
   --s4: 16px;
-  --s5: 24px;
+  --s5: 22px;
   --s6: 32px;
 
-  --radius: 6px;
+  --radius: 3px;
+  --rail: 320px;
 }

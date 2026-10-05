@@ -112,16 +112,16 @@ Longest wait between purchases: 2m 58s (from 1h 31m 41s).
 | Epoch | Ending | Lost at | Time | Furthest species | Fossils earned | Fossil upgrades after |
 |---|---|---|---|---|---|---|
 | 1 | survived | - | 4h 49m 52s | Humans | 152 | - |
-| 2 | survived | - | 2h 17m 23s | Humans | 162 | vigor 4, luck 3, hide 2, adapt 2, record 1 |
-| 3 | survived | - | 2h 01m 27s | Humans | 176 | vigor 5, luck 4, hide 3, adapt 3, record 2 |
-| 4 | survived | - | 2h 28m 45s | Humans | 191 | vigor 6, luck 5, hide 4, adapt 3, record 3 |
-| 5 | survived | - | 2h 28m 12s | Humans | 191 | vigor 6, luck 5, hide 5, adapt 4, record 3 |
-| 6 | survived | - | 2h 01m 09s | Humans | 206 | vigor 7, luck 6, hide 5, adapt 4, record 4 |
-| 7 | survived | - | 2h 29m 07s | Humans | 207 | vigor 7, luck 6, hide 5, adapt 5, record 4 |
-| 8 | survived | - | 2h 15m 37s | Humans | 207 | vigor 8, luck 6, hide 6, adapt 5, record 4 |
-| 9 | survived | - | 2h 22m 22s | Humans | 208 | vigor 8, luck 7, hide 6, adapt 5, record 4 |
-| 10 | survived | - | 2h 58m 42s | Humans | 201 | vigor 8, luck 7, hide 6, adapt 6, record 4 |
-| 11 | survived | - | 3h 34m 24s | Humans | 224 | vigor 8, luck 7, hide 6, adapt 6, record 5 |
-| 12 | extinct | Sponges era | 1h 28m 07s | Sponges | 16 | vigor 8, luck 7, hide 7, adapt 6, record 5 |
+| 2 | survived | - | 2h 33m 36s | Humans | 162 | vigor 4, luck 3, hide 2, adapt 2, record 1 |
+| 3 | survived | - | 2h 22m 38s | Humans | 176 | vigor 5, luck 4, hide 3, adapt 3, record 2 |
+| 4 | survived | - | 2h 22m 21s | Humans | 191 | vigor 6, luck 5, hide 4, adapt 3, record 3 |
+| 5 | survived | - | 2h 31m 23s | Humans | 191 | vigor 6, luck 5, hide 5, adapt 4, record 3 |
+| 6 | survived | - | 2h 38m 53s | Humans | 206 | vigor 7, luck 6, hide 5, adapt 4, record 4 |
+| 7 | survived | - | 2h 29m 22s | Humans | 206 | vigor 7, luck 6, hide 5, adapt 5, record 4 |
+| 8 | survived | - | 2h 52m 56s | Humans | 207 | vigor 8, luck 6, hide 6, adapt 5, record 4 |
+| 9 | survived | - | 3h 02m 27s | Humans | 207 | vigor 8, luck 7, hide 6, adapt 5, record 4 |
+| 10 | survived | - | 3h 25m 35s | Humans | 208 | vigor 8, luck 7, hide 6, adapt 6, record 4 |
+| 11 | extinct | Reckoning | 4h 03m 27s | Humans | 146 | vigor 8, luck 7, hide 6, adapt 6, record 5 |
+| 11 | extinct | Reckoning | 4h 17m 28s | Humans | 147 | vigor 8, luck 7, hide 7, adapt 6, record 5 |
 
-Total bot time over 12 Epochs: 31h 15m 10s.
+Total bot time over 12 Epochs: 37h 30m 00s.

@@ -44,7 +44,7 @@ interface Props {
 export const TraitRow = memo(function TraitRow(p: Props) {
   const { trait } = p
   return (
-    <div className={p.owned ? 'trait trait-owned' : p.unlocked ? 'trait' : 'trait trait-locked'}>
+    <div className={`trait trait-${trait.branch}${p.owned ? ' trait-owned' : p.unlocked ? '' : ' trait-locked'}`}>
       <div className="spread">
         <span className="trait-name">{trait.name}</span>
         <span className="muted small">{p.owned && p.level > 0 ? `level ${p.level}` : `tier ${trait.tier}`}</span>

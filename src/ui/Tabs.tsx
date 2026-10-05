@@ -1,6 +1,6 @@
 import { memo } from 'react'
 
-export type TabId = 'species' | 'traits' | 'lineage' | 'mutations' | 'genome' | 'fossils' | 'log'
+export type TabId = 'species' | 'traits' | 'lineage' | 'mutations' | 'genome' | 'fossils'
 
 export const Tabs = memo(function Tabs({ tabs, current, onSelect }: { tabs: TabId[]; current: TabId; onSelect: (t: TabId) => void }) {
   return (

@@ -12,6 +12,7 @@ A text-only incremental game for the browser. Guide one line of life from a prot
 - **Trait levels** with no cap, plus Gifted Traits that carry rare Mutations.
 - **Rebirth into Epochs:** earn Fossils, buy permanent upgrades, and face stronger Threats each time you survive.
 - **Events** with choices, Population losses, Genome from extinct species, and a final Reckoning.
+- An always-open Chronicle log, so you never miss what happened.
 - Runs in the background. Autosaves, plus save export and import.
 - Text only: no images, works on phones.
 
@@ -40,7 +41,7 @@ npm run balance    # simulate the game with a bot and write balance-report.md
 
 - React 19 + TypeScript (strict), built with Vite
 - State in React Context + `useReducer`; game rules in a pure TypeScript engine
-- Plain CSS with variables, JetBrains Mono
+- Plain CSS with variables, Space Grotesk and Space Mono
 - Deployed to GitHub Pages with GitHub Actions
 
 ## Project structure

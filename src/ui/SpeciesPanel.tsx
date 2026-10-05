@@ -30,18 +30,18 @@ export const SpeciesPanel = memo(function SpeciesPanel({ state, mods, onBuy, onA
   const anyProducer = state.species.some(sp => sp.producers.some(p => p.bought > 0))
 
   return (
-    <section className="stack">
+    <section className="strata">
       {shown.map(({ sp, k }) => {
         const def = SPECIES[k]
         const active = sp.status === 'active'
         const rows = ([0, 1, 2] as const).filter(t => t === 0 || sp.producers[t].bought > 0 || state.revealed.includes(`t${t + 1}-${k}`))
         return (
-          <article key={k} className={active ? 'panel stack' : 'panel stack panel-fading'}>
+          <article key={k} className={active ? 'stratum stack' : 'stratum stratum-old stack'}>
             <div className="spread">
               <h2 className="panel-title">
                 {def.name} <span className="muted">{def.era}</span>
               </h2>
-              <span className={active ? 'accent small' : 'loss small'}>{sp.status}</span>
+              <span className={active ? 'state state-active' : 'state state-old'}>{sp.status}</span>
             </div>
 
             {active && !state.threat && (() => {
