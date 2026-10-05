@@ -5,7 +5,7 @@ import { computeMods } from './modifiers'
 import { stepObjectives, stepReveals } from './objectives'
 import { updatePeaks } from './population'
 import { stepProduction } from './production'
-import { checkExtinctEnding, stepReckoning } from './reckoning'
+import { checkExtinctEnding, stepThreat } from './reckoning'
 import { draft } from './state'
 import type { GameState } from './types'
 
@@ -18,7 +18,7 @@ function step(s: GameState, dt: number) {
   checkExtinctions(s)                         // 5. extinction and Genome
   rescueIfStuck(s)
   checkBirth(s)                               // 6. birth
-  stepReckoning(s, computeMods(s), dt)        // 7. Reckoning
+  stepThreat(s, computeMods(s), dt)           // 7. era Threat or Reckoning
   checkExtinctEnding(s)
   stepObjectives(s)                           // 8. objectives
   stepReveals(s)

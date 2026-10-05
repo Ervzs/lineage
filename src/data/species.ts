@@ -1,7 +1,7 @@
 import type { SpeciesDef } from '../engine/types'
 import {
   ANCHORS, CHAIN_RATE, DECLINE_SECONDS, DEFENSE_UNITS, PRODUCER_COST_MULT, PRODUCER_GROWTH,
-  TIER1_PAYBACK, UNIT_SCALES,
+  SPECIES_PACE, TIER1_PAYBACK, UNIT_SCALES,
 } from './constants'
 import { BIRTH_TEXT, EXTINCT_TEXT } from './story'
 
@@ -22,7 +22,7 @@ export const SPECIES: SpeciesDef[] = ROWS.map(([name, era, t1, t2, t3], i) => {
     name: pname,
     baseCost: PRODUCER_COST_MULT[tier] * b,
     growth: PRODUCER_GROWTH[tier],
-    baseRate: tier === 0 ? b / TIER1_PAYBACK : CHAIN_RATE,
+    baseRate: (tier === 0 ? b / TIER1_PAYBACK : CHAIN_RATE) / SPECIES_PACE[i],
   })
   return {
     index: i,

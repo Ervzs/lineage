@@ -4,7 +4,9 @@ import { buyCount, displayCount, producerCost } from '../engine/costs'
 import { fmt } from '../engine/format'
 import { nextMilestone, type Mods } from '../engine/modifiers'
 import { chainRate, incomeBySpecies } from '../engine/production'
+import { upcomingThreat } from '../engine/reckoning'
 import type { BuyMode, GameState } from '../engine/types'
+import { resistLabel } from './Header'
 import { ProducerRow } from './ProducerRow'
 import { TextBar } from './TextBar'
 
@@ -41,6 +43,24 @@ export const SpeciesPanel = memo(function SpeciesPanel({ state, mods, onBuy, onA
               </h2>
               <span className={active ? 'accent small' : 'loss small'}>{sp.status}</span>
             </div>
+
+            {active && !state.threat && (() => {
+              const next = upcomingThreat(state, k)
+              if (!next) return <p className="small muted">A final Threat waits at the end of this era.</p>
+              const reqs = Object.entries(next.requirements) as [keyof typeof mods.resist, number][]
+              return (
+                <p className="small era-ahead">
+                  <span className="muted">Era threat ahead:</span> <span className="loss">{next.def.name}</span>
+                  <span className="muted">. Needs </span>
+                  {reqs.map(([r, n], i) => (
+                    <span key={r}>
+                      {i > 0 && <span className="muted">, </span>}
+                      <span className={mods.resist[r] >= n ? 'accent' : ''}>{resistLabel(r)} {fmt(mods.resist[r])}/{n}</span>
+                    </span>
+                  ))}
+                </p>
+              )
+            })()}
 
             {!active && (
               <p className="small">

@@ -1,4 +1,4 @@
-import type { Branch, Effect, TraitDef } from '../engine/types'
+import type { Branch, Effect, Resist, TraitDef } from '../engine/types'
 import {
   ANCHORS, CUNNING1_LUCK, CUNNING2_RISK, CUNNING3_GIFT, DEFENSE_UNITS, GROWTH_MULTS,
   SURVIVAL2_LOSS_MULT, TRAIT_COST_MULT, TRAIT_POINTS,
@@ -98,6 +98,18 @@ const NAMES: [string, string][][] = [
 
 export const BRANCHES: Branch[] = ['growth', 'survival', 'cunning']
 
+// Resistance type of Survival tier 1 and tier 3, per species.
+export const SURVIVAL_RESISTS: [Resist, Resist][] = [
+  ['toughness', 'immunity'],    // Stable Membrane, Repair Chemistry
+  ['endurance', 'immunity'],    // Spore Formation, Biofilm Shield
+  ['toughness', 'endurance'],   // Spicule Skeleton, Regeneration
+  ['toughness', 'toughness'],   // Scales, Armored Plates
+  ['endurance', 'toughness'],   // Dry Skin, Venom
+  ['endurance', 'immunity'],    // Nocturnal Life, Immune Memory
+  ['endurance', 'toughness'],   // Shelter, Group Watch
+  ['toughness', 'endurance'],   // Fortification, Planetary Watch
+]
+
 export const traitId = (species: number, branch: Branch, tier: number) => `s${species + 1}-${branch}${tier}`
 
 function effectsFor(species: number, branch: Branch, tier: 1 | 2 | 3): Effect[] {
@@ -108,7 +120,8 @@ function effectsFor(species: number, branch: Branch, tier: 1 | 2 | 3): Effect[] 
   }
   if (branch === 'survival') {
     if (tier === 2) return [{ target: 'event.lossMult', op: 'mul', value: SURVIVAL2_LOSS_MULT }]
-    return [{ target: 'defense.flat', op: 'add', value: tier === 1 ? d : 2 * d }]
+    const r = SURVIVAL_RESISTS[species][tier === 1 ? 0 : 1]
+    return [{ target: `resist.${r}`, op: 'add', value: tier === 1 ? d : 2 * d }]
   }
   if (tier === 1) return [{ target: 'luck.points', op: 'add', value: CUNNING1_LUCK }]
   if (tier === 2) return [{ target: 'event.riskSuccess', op: 'add', value: CUNNING2_RISK }]

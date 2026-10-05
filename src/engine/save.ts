@@ -1,5 +1,7 @@
 import { SAVE_KEY, SAVE_VERSION } from '../data/constants'
 import { SPECIES } from '../data/species'
+import { THREAT_BY_ID } from '../data/threats'
+import { requirements } from './reckoning'
 import { initialState } from './state'
 import type { GameState } from './types'
 
@@ -8,9 +10,21 @@ export const serialize = (s: GameState) => JSON.stringify(s)
 // Upgrades older saves by version number. Missing fields take their defaults.
 export function migrate(raw: Record<string, unknown>): GameState {
   const base = initialState(typeof raw.seed === 'number' ? raw.seed : undefined)
+  if (raw.version === 1) {
+    // v1 had a single Defense stat and a `reckoning` object.
+    const r = raw.reckoning as { threatId: string; countdown: number; resolved: boolean } | null
+    const def = r && THREAT_BY_ID[r.threatId]
+    raw = { ...raw }
+    raw.threat = r && def ? {
+      kind: 'final', id: r.threatId, species: SPECIES.length - 1, countdown: r.countdown,
+      requirements: requirements(def.checks, SPECIES.length - 1, true, 1), resolved: r.resolved,
+    } : null
+    delete raw.reckoning
+  }
   const s = { ...base, ...raw, version: SAVE_VERSION } as GameState
   s.stats = { ...base.stats, ...(raw.stats as object) }
   s.settings = { ...base.settings, ...(raw.settings as object) }
+  s.meta = { ...base.meta, ...(raw.meta as object) }
   return s
 }
 

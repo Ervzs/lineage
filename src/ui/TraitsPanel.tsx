@@ -1,8 +1,8 @@
 import { memo, useState } from 'react'
 import { SPECIES } from '../data/species'
 import { BRANCHES, TRAIT_BY_ID, TRAITS } from '../data/traits'
-import { traitCost } from '../engine/costs'
-import { traitOwned, traitUnlocked } from '../engine/evolution'
+import { levelCost, traitCost } from '../engine/costs'
+import { canLevelTrait, traitOwned, traitUnlocked } from '../engine/evolution'
 import { activeIndex, isBorn } from '../engine/state'
 import type { GameState, TraitDef } from '../engine/types'
 import { TraitRow } from './TraitRow'
@@ -13,9 +13,9 @@ function requiresText(t: TraitDef): string {
   return [...all, ...any].join(' and ')
 }
 
-interface Props { state: GameState; onBuy: (id: string) => void }
+interface Props { state: GameState; onBuy: (id: string) => void; onLevel: (id: string) => void }
 
-export const TraitsPanel = memo(function TraitsPanel({ state, onBuy }: Props) {
+export const TraitsPanel = memo(function TraitsPanel({ state, onBuy, onLevel }: Props) {
   const born = state.species.map((sp, k) => ({ sp, k })).filter(({ sp }) => isBorn(sp))
   const fallback = Math.max(0, activeIndex(state))
   const [picked, setPicked] = useState<number | null>(null)
@@ -51,9 +51,13 @@ export const TraitsPanel = memo(function TraitsPanel({ state, onBuy }: Props) {
                   owned={traitOwned(state, t.id)}
                   unlocked={traitUnlocked(state, t.id)}
                   affordable={state.biomass >= cost && !state.ending}
+                  level={state.traitLevels[t.id] ?? 0}
+                  levelCost={levelCost(state, t)}
+                  canLevel={canLevelTrait(state, t.id)}
                   requiresText={requiresText(t)}
                   mutation={state.mutations.find(m => m.traitId === t.id)}
                   onBuy={onBuy}
+                  onLevel={onLevel}
                 />
               )
             })}

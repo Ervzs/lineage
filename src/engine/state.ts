@@ -1,6 +1,6 @@
 import { LOG_MAX, SAVE_VERSION } from '../data/constants'
 import { SPECIES } from '../data/species'
-import type { GameState, LogEntry, SpeciesState } from './types'
+import type { GameState, LogEntry, Meta, SpeciesState } from './types'
 
 const newSpecies = (active: boolean): SpeciesState => ({
   status: active ? 'active' : 'locked',
@@ -13,7 +13,9 @@ const newSpecies = (active: boolean): SpeciesState => ({
   genomePaid: false,
 })
 
-export function initialState(seed = (Date.now() % 2147483647) | 0): GameState {
+export const newMeta = (): Meta => ({ epoch: 1, fossils: 0, fossilsEarned: 0, bestEpoch: 0, upgrades: {} })
+
+export function initialState(seed = (Date.now() % 2147483647) | 0, meta: Meta = newMeta()): GameState {
   return {
     version: SAVE_VERSION,
     seed,
@@ -30,7 +32,9 @@ export function initialState(seed = (Date.now() % 2147483647) | 0): GameState {
     activeEvent: null,
     nextEventIn: 0,
     tempEffects: [],
-    reckoning: null,
+    threat: null,
+    traitLevels: {},
+    meta,
     objectiveIndex: 0,
     revealed: [],
     log: [{ t: 0, text: SPECIES[0].birthText, kind: 'story' }],
@@ -52,7 +56,7 @@ export function draft(s: GameState): GameState {
     })),
     tempEffects: s.tempEffects.map(e => ({ ...e })),
     activeEvent: s.activeEvent && { ...s.activeEvent },
-    reckoning: s.reckoning && { ...s.reckoning },
+    threat: s.threat && { ...s.threat },
     stats: { ...s.stats },
   }
 }

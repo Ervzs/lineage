@@ -1,19 +1,21 @@
 import { memo } from 'react'
+import { RESISTS } from '../data/constants'
 import { RARITIES } from '../data/mutations'
 import { SPECIES } from '../data/species'
 import { TRAIT_BY_ID } from '../data/traits'
 import { fmt } from '../engine/format'
 import { describeMutation } from '../engine/mutations'
-import type { MutationInstance } from '../engine/types'
+import type { MutationInstance, Resist } from '../engine/types'
+import { resistLabel } from './Header'
 
 interface Props {
   mutations: MutationInstance[]
   luck: number
-  defense: number
+  resist: Record<Resist, number>
   productionBonus: number
 }
 
-export const MutationsPanel = memo(function MutationsPanel({ mutations, luck, defense, productionBonus }: Props) {
+export const MutationsPanel = memo(function MutationsPanel({ mutations, luck, resist, productionBonus }: Props) {
   const sorted = mutations
     .map((m, i) => ({ m, i }))
     .sort((a, b) => RARITIES.indexOf(b.m.rarity) - RARITIES.indexOf(a.m.rarity) || a.i - b.i)
@@ -36,7 +38,7 @@ export const MutationsPanel = memo(function MutationsPanel({ mutations, luck, de
       </ul>
       <p className="row small mutation-foot">
         {luck > 0 && <span><span className="muted">Luck</span> {fmt(luck)}</span>}
-        <span><span className="muted">Defense from mutations</span> {fmt(defense)}</span>
+        {RESISTS.filter(r => resist[r] > 0).map(r => <span key={r}><span className="muted">{resistLabel(r)}</span> +{fmt(resist[r])}</span>)}
         <span><span className="muted">Production bonus</span> +{Math.round(productionBonus * 100)}%</span>
       </p>
     </section>

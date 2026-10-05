@@ -1,11 +1,12 @@
 import { ABSORB_AMOUNT } from '../data/constants'
 import { SPECIES } from '../data/species'
 import { buyCount, producerCost } from './costs'
-import { buyTrait, canBuyTrait } from './evolution'
+import { buyTrait, canBuyTrait, canLevelTrait, levelTrait } from './evolution'
 import { resolveEvent } from './events'
 import { buyNode, canBuyNode } from './genome'
 import { computeMods } from './modifiers'
 import { stepObjectives, stepReveals } from './objectives'
+import { buyUpgrade, canBuyUpgrade, rebirth } from './rebirth'
 import { importSave } from './save'
 import { draft, initialState } from './state'
 import { tick } from './tick'
@@ -49,6 +50,16 @@ export function gameReducer(state: GameState, action: Action): GameState {
     case 'BUY_TRAIT':
       if (!canBuyTrait(state, action.traitId)) return state
       return edit(state, s => buyTrait(s, action.traitId))
+
+    case 'LEVEL_TRAIT':
+      if (!canLevelTrait(state, action.traitId)) return state
+      return edit(state, s => levelTrait(s, action.traitId))
+
+    case 'BUY_FOSSIL_UPGRADE':
+      return canBuyUpgrade(state, action.id) ? buyUpgrade(state, action.id) : state
+
+    case 'REBIRTH':
+      return state.ending ? rebirth(state) : state
 
     case 'BUY_GENOME_NODE':
       if (state.ending || !canBuyNode(state, action.nodeId)) return state

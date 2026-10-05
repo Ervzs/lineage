@@ -3,10 +3,11 @@ export type Branch = 'growth' | 'survival' | 'cunning'
 export type SpeciesStatus = 'locked' | 'active' | 'declining' | 'extinct'
 export type MutationType = 'production' | 'chain' | 'defense' | 'luck'
 export type BuyMode = 1 | 10 | 'max'
+export type Resist = 'immunity' | 'toughness' | 'endurance'
 
 export type EffectTarget =
   | 'tier1.output' | 'tier2.output' | 'tier3.output'
-  | 'defense.flat'
+  | 'resist.immunity' | 'resist.toughness' | 'resist.endurance'
   | 'event.lossMult'
   | 'luck.points'
   | 'event.riskSuccess'
@@ -50,7 +51,7 @@ export interface TraitDef {
 }
 
 export interface GenomeNodeDef {
-  id: string; name: string; cost: number; defense: number; requires: string[]; flavor: string
+  id: string; name: string; cost: number; resist: Partial<Record<Resist, number>>; requires: string[]; flavor: string
 }
 
 export interface MutationInstance {
@@ -60,6 +61,7 @@ export interface MutationInstance {
   value: number
   traitId: string
   species?: number
+  resist?: Resist             // defense type only
 }
 
 export interface Outcome {
@@ -90,7 +92,9 @@ export interface EventDef {
   flavor: string
 }
 
-export interface ThreatDef { id: string; name: string; text: string }
+export interface ThreatDef { id: string; name: string; text: string; checks: Resist[] }
+
+export interface EraThreatDef { species: number; id: string; name: string; text: string; failText: string; checks: Resist[] }
 
 export type ObjectiveCheck =
   | { kind: 'biomass'; n: number }
@@ -117,12 +121,22 @@ export interface SpeciesState {
 
 export interface LogEntry { t: number; text: string; kind: 'story' | 'event' | 'system' }
 
-export interface Reckoning {
-  started: boolean
-  threatId: string
-  level: number
+// An era Threat (end of species 1-7) or the final Reckoning (species 8).
+export interface Threat {
+  kind: 'era' | 'final'
+  id: string
+  species: number
   countdown: number
+  requirements: Partial<Record<Resist, number>>
   resolved: boolean
+}
+
+export interface Meta {
+  epoch: number
+  fossils: number
+  fossilsEarned: number
+  bestEpoch: number           // highest Epoch survived (0 = none)
+  upgrades: Record<string, number>
 }
 
 export interface GameState {
@@ -141,7 +155,9 @@ export interface GameState {
   activeEvent: ActiveEvent | null
   nextEventIn: number
   tempEffects: { id: string; productionMult: number; remaining: number }[]
-  reckoning: Reckoning | null
+  threat: Threat | null
+  traitLevels: Record<string, number>
+  meta: Meta
   objectiveIndex: number
   revealed: string[]
   log: LogEntry[]          // newest first
@@ -155,6 +171,9 @@ export type Action =
   | { type: 'ABSORB' }
   | { type: 'BUY_PRODUCER'; species: number; tier: 0 | 1 | 2 }
   | { type: 'BUY_TRAIT'; traitId: string }
+  | { type: 'LEVEL_TRAIT'; traitId: string }
+  | { type: 'BUY_FOSSIL_UPGRADE'; id: string }
+  | { type: 'REBIRTH' }
   | { type: 'BUY_GENOME_NODE'; nodeId: string }
   | { type: 'RESOLVE_EVENT'; optionId: string }
   | { type: 'SET_BUY_MODE'; mode: BuyMode }

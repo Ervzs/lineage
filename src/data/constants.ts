@@ -1,7 +1,9 @@
+import type { Resist } from '../engine/types'
+
 // All tuning knobs. Values marked [START] in PLAN.md are tuned by `npm run balance`.
 
 export const SAVE_KEY = 'lineage-save-v1'
-export const SAVE_VERSION = 1
+export const SAVE_VERSION = 2
 export const TICK_MS = 100
 export const AUTOSAVE_MS = 10_000
 export const LOG_MAX = 200
@@ -9,7 +11,7 @@ export const NUMBER_CLAMP = 1e300
 export const BALANCE_CEILING = 1e66
 
 // Species anchors B_k (cost of the first Tier 1 producer) and population scales.
-export const ANCHORS = [10, 2.66e4, 8.65e7, 2.69e11, 8.99e14, 3e18, 1.13e22, 3.97e25]
+export const ANCHORS = [10, 1.13e8, 4.66e12, 3.84e16, 1.43e20, 4.64e23, 1.66e27, 6.17e30]
 export const UNIT_SCALES = [1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21]
 export const DECLINE_SECONDS = [300, 450, 600, 900, 1200, 1800, 2400, 1800]
 export const DEFENSE_UNITS = [4, 6, 8, 12, 18, 26, 36, 50]
@@ -17,8 +19,10 @@ export const DEFENSE_UNITS = [4, 6, 8, 12, 18, 26, 36, 50]
 // Producers (index = tier - 1)
 export const PRODUCER_COST_MULT = [1, 20, 400]
 export const PRODUCER_GROWTH = [1.15, 1.2, 1.25]
-export const TIER1_PAYBACK = 20      // Tier 1 makes B_k / 20 Biomass per second
-export const CHAIN_RATE = 0.1        // units per second per unit for tiers 2 and 3
+export const TIER1_PAYBACK = 20      // Tier 1 makes B_k / 20 Biomass per second (before pace)
+export const CHAIN_RATE = 0.1        // units per second per unit for tiers 2 and 3 (before pace)
+// Production slows in later eras: rates are divided by the species' pace.
+export const SPECIES_PACE = [1, 3, 5, 8, 11, 11, 11, 11]
 export const MILESTONES = [10, 25, 50, 100, 200]
 export const POP_WEIGHTS = [1, 5, 25]
 
@@ -42,7 +46,7 @@ export const GIFT_CAP = 60
 export const MUTATION_DEFENSE_CAP = 100
 
 // Genome
-export const GENOME_FACTOR = 5.5
+export const GENOME_FACTOR = 2.8
 
 // Events
 export const EVENT_WINDOW = 90
@@ -59,9 +63,27 @@ export const MAX_BIOMASS_LOSS_PCT = 15
 export const MAX_HEALTH_DROP_PCT = 50
 export const HEALTH_FLOOR = 0.4
 
-// Reckoning
-export const THREAT_LEVEL = 750
+export const RESISTS: Resist[] = ['immunity', 'toughness', 'endurance']
+
+// Threats. Requirement per checked resistance =
+// ceil(fraction × max reachable from data) × EPOCH_SCALE^(epoch - 1).
+export const ERA_REQ_FRACTION = 0.6      // of Survival Traits up to that species (level 0)
+export const FINAL_REQ_FRACTION = 0.8    // of all Survival Traits and Genome nodes
+export const EPOCH_SCALE = 1.6
+export const ERA_COUNTDOWN = 300
 export const THREAT_COUNTDOWN = 600
+
+// Trait levels
+export const LEVEL_COST_MULT = 10
+export const LEVEL_GROWTH_STEP = 1.15
+export const LEVEL_LOSS_STEP = 0.97
+export const LEVEL_LUCK = 1
+export const LEVEL_RISK = 1
+export const LEVEL_GIFT = 2
+
+// Rebirth
+export const FOSSIL_SURVIVE_MULT = 2
+export const FOSSIL_GENOME_DIV = 10
 
 // Absorb
 export const ABSORB_AMOUNT = 1

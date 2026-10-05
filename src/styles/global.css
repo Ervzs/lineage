@@ -580,3 +580,33 @@ textarea {
 .end-stats dd {
   font-variant-numeric: tabular-nums;
 }
+
+/* ---------- v1.1: threats, epochs ---------- */
+
+.epoch {
+  font-size: var(--fs-small);
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: none;
+}
+
+.stat-small .stat-value {
+  font-size: var(--fs-base);
+}
+
+.threat-req {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s1) var(--s3);
+}
+
+.threat-req-name {
+  min-width: 10ch;
+  font-weight: 700;
+}
+
+.rebirth {
+  border-top: 1px solid var(--line);
+  padding-top: var(--s4);
+}

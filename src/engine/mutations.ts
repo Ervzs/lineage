@@ -1,4 +1,5 @@
 import { COMMON_ODDS_FLOOR, MUTATION_TYPES, MUTATION_VALUES, MUTATION_WEIGHTS, RARITIES, RARITY_ODDS } from '../data/mutations'
+import { RESISTS } from '../data/constants'
 import { TRAIT_BY_ID } from '../data/traits'
 import type { Mods } from './modifiers'
 import { nextRandom, pickWeighted } from './rng'
@@ -25,7 +26,7 @@ export const rollType = (rng: { rngState: number }): MutationType =>
 
 export function describeMutation(m: MutationInstance): string {
   const v = m.type === 'production' || m.type === 'chain' ? `+${Math.round(m.value * 100)}%` : `+${m.value}`
-  return `${m.rarity} ${m.type} ${v}`
+  return `${m.rarity} ${m.type === 'defense' && m.resist ? m.resist : m.type} ${v}`
 }
 
 // One gift check per Trait purchase, after the Trait's own effect applies.
@@ -41,6 +42,7 @@ export function giftCheck(s: GameState, m: Mods, traitId: string) {
     value: MUTATION_VALUES[type][rarity],
     traitId,
     species: type === 'chain' ? t.species : undefined,
+    resist: type === 'defense' ? pickWeighted(s, RESISTS, () => 1) : undefined,
   }
   s.mutations = [...s.mutations, mutation]
   reveal(s, 'mutations')

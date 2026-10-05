@@ -4,6 +4,7 @@ import { SPECIES } from '../data/species'
 import { TRAITS } from '../data/traits'
 import type { Mods } from './modifiers'
 import { canBuyNode } from './genome'
+import { missing, threatName } from './reckoning'
 import { activeIndex, reveal } from './state'
 import type { GameState, ObjectiveDef } from './types'
 
@@ -21,7 +22,7 @@ function progress(s: GameState, o: ObjectiveDef): [number, number] | null {
 
 function done(s: GameState, o: ObjectiveDef): boolean {
   if (o.check.kind === 'born') {
-    return o.species === SPECIES.length - 1 ? !!s.reckoning : s.species[o.species + 1].status !== 'locked'
+    return o.species === SPECIES.length - 1 ? s.threat?.kind === 'final' : s.species[o.species + 1].status !== 'locked'
   }
   const p = progress(s, o)!
   return p[0] >= p[1]
@@ -39,8 +40,17 @@ export function stepObjectives(s: GameState) {
 
 export function objectiveView(s: GameState, m: Mods): ObjectiveView | null {
   if (s.ending) return null
-  if (s.reckoning && !s.reckoning.resolved) {
-    return { text: EXTRA_OBJECTIVES.threat, current: m.defense, target: s.reckoning.level }
+  if (s.threat && !s.threat.resolved) {
+    const name = threatName(s.threat)
+    const r = missing(s.threat, m)[0]
+    if (!r) return { text: EXTRA_OBJECTIVES.threatHold.replace('{threat}', name) }
+    const n = s.threat.requirements[r]!
+    const label = r[0].toUpperCase() + r.slice(1)
+    return {
+      text: EXTRA_OBJECTIVES.threatRaise.replace('{resist}', label).replace('{n}', String(n)).replace('{threat}', name),
+      current: m.resist[r],
+      target: n,
+    }
   }
   if (s.genomeNodes.length === 0 && GENOME_NODES.some(n => canBuyNode(s, n.id))) {
     return { text: EXTRA_OBJECTIVES.genomeNode }

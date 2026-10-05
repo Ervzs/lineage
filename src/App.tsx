@@ -1,24 +1,25 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { GameProvider, hardReset, saveNow, useGameDispatch, useGameState } from './context/GameContext'
 import { EVENT_BY_ID } from './data/events'
-import { THREAT_BY_ID } from './data/threats'
 import { computeMods } from './engine/modifiers'
 import { objectiveView } from './engine/objectives'
 import { totalPopulation } from './engine/population'
 import { totalIncome } from './engine/production'
+import { threatName } from './engine/reckoning'
 import { activeIndex } from './engine/state'
 import type { BuyMode } from './engine/types'
 import { EndScreen } from './ui/EndScreen'
 import { EventCard } from './ui/EventCard'
+import { FossilsPanel } from './ui/FossilsPanel'
 import { GenomePanel } from './ui/GenomePanel'
 import { Header } from './ui/Header'
 import { LineagePanel } from './ui/LineagePanel'
 import { LogPanel } from './ui/LogPanel'
 import { MutationsPanel } from './ui/MutationsPanel'
 import { ObjectiveBar } from './ui/ObjectiveBar'
-import { ReckoningPanel } from './ui/ReckoningPanel'
 import { SettingsPanel } from './ui/SettingsPanel'
 import { SpeciesPanel } from './ui/SpeciesPanel'
+import { ThreatPanel } from './ui/ThreatPanel'
 import { Tabs, type TabId } from './ui/Tabs'
 import { TraitsPanel } from './ui/TraitsPanel'
 
@@ -35,12 +36,9 @@ function Game() {
   const income = totalIncome(s, m)
   const objective = objectiveView(s, m)
   const anyProducer = s.species.some(sp => sp.producers.some(p => p.bought > 0))
-  const threat = s.reckoning && {
-    name: THREAT_BY_ID[s.reckoning.threatId].name,
-    level: s.reckoning.level,
-    countdown: s.reckoning.countdown,
-    resolved: s.reckoning.resolved,
-  }
+  const threat = s.threat && !s.threat.resolved
+    ? { name: threatName(s.threat), countdown: s.threat.countdown, requirements: s.threat.requirements }
+    : null
 
   const onSave = useCallback(() => {
     saveNow(s)
@@ -52,6 +50,8 @@ function Game() {
   const onAbsorb = useCallback(() => dispatch({ type: 'ABSORB' }), [dispatch])
   const onMode = useCallback((mode: BuyMode) => dispatch({ type: 'SET_BUY_MODE', mode }), [dispatch])
   const onBuyTrait = useCallback((traitId: string) => dispatch({ type: 'BUY_TRAIT', traitId }), [dispatch])
+  const onLevelTrait = useCallback((traitId: string) => dispatch({ type: 'LEVEL_TRAIT', traitId }), [dispatch])
+  const onBuyFossil = useCallback((id: string) => dispatch({ type: 'BUY_FOSSIL_UPGRADE', id }), [dispatch])
   const onBuyNode = useCallback((nodeId: string) => dispatch({ type: 'BUY_GENOME_NODE', nodeId }), [dispatch])
   const onResolve = useCallback((optionId: string) => dispatch({ type: 'RESOLVE_EVENT', optionId }), [dispatch])
   const onImport = useCallback((data: string) => dispatch({ type: 'IMPORT_SAVE', data }), [dispatch])
@@ -59,9 +59,12 @@ function Game() {
     hardReset(dispatch)
     setTab('species')
   }, [dispatch])
-  const onRestart = useCallback(() => {
-    if (window.confirm('Start a new run? This run will be deleted.')) onReset()
-  }, [onReset])
+  const onRebirth = useCallback(() => {
+    if (window.confirm('Rebirth into a new Epoch? Only Fossils and Fossil upgrades carry over.')) {
+      dispatch({ type: 'REBIRTH' })
+      setTab('species')
+    }
+  }, [dispatch])
 
   // Keyboard: A absorb, 1-3 buy, M buy mode, E default event answer.
   const latest = useRef(s)
@@ -92,6 +95,7 @@ function Game() {
   if (s.species[1].status !== 'locked') tabs.push('lineage')
   if (s.mutations.length) tabs.push('mutations')
   if (s.genomeEarned > 0) tabs.push('genome')
+  if (s.meta.epoch > 1 || s.meta.fossilsEarned > 0) tabs.push('fossils')
   tabs.push('log')
   const current = tabs.includes(tab) ? tab : 'species'
 
@@ -103,10 +107,12 @@ function Game() {
         population={totalPopulation(s)}
         health={s.health}
         genome={s.genome}
-        defense={m.defense}
+        resist={m.resist}
+        epoch={s.meta.epoch}
+        fossils={s.meta.fossils}
         showRate={anyProducer}
         showGenome={s.genomeEarned > 0}
-        showDefense={m.defense > 0}
+        showFossils={s.meta.epoch > 1 || s.meta.fossilsEarned > 0}
         threat={threat}
         saved={saved}
         settingsOpen={settingsOpen}
@@ -117,22 +123,23 @@ function Game() {
       {settingsOpen ? (
         <SettingsPanel state={s} onImport={onImport} onReset={onReset} onMode={onMode} />
       ) : s.ending ? (
-        <EndScreen state={s} onRestart={onRestart} />
+        <EndScreen state={s} onRebirth={onRebirth} />
       ) : (
         <>
           {objective && <ObjectiveBar {...objective} />}
           {s.activeEvent && <EventCard eventId={s.activeEvent.id} remaining={s.activeEvent.remaining} mods={m} onResolve={onResolve} />}
-          {s.reckoning && <ReckoningPanel reckoning={s.reckoning} defense={m.defense} />}
+          {s.threat && <ThreatPanel threat={s.threat} resist={m.resist} />}
           <Tabs tabs={tabs} current={current} onSelect={setTab} />
           {current === 'species' && <SpeciesPanel state={s} mods={m} onBuy={onBuy} onAbsorb={onAbsorb} onMode={onMode} />}
-          {current === 'traits' && <TraitsPanel state={s} onBuy={onBuyTrait} />}
+          {current === 'traits' && <TraitsPanel state={s} onBuy={onBuyTrait} onLevel={onLevelTrait} />}
           {current === 'lineage' && <LineagePanel state={s} />}
           {current === 'mutations' && (
-            <MutationsPanel mutations={s.mutations} luck={m.luck} defense={m.defenseMutations} productionBonus={m.productionBonus} />
+            <MutationsPanel mutations={s.mutations} luck={m.luck} resist={m.resistMutations} productionBonus={m.productionBonus} />
           )}
           {current === 'genome' && (
-            <GenomePanel genome={s.genome} nodes={s.genomeNodes} defense={m.defenseGenome} ended={!!s.ending} onBuy={onBuyNode} />
+            <GenomePanel genome={s.genome} nodes={s.genomeNodes} resist={m.resistGenome} ended={!!s.ending} onBuy={onBuyNode} />
           )}
+          {current === 'fossils' && <FossilsPanel state={s} onBuy={onBuyFossil} />}
           {current === 'log' && <LogPanel log={s.log} />}
         </>
       )}

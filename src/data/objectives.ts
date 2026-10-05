@@ -33,5 +33,6 @@ export const OBJECTIVES: ObjectiveDef[] = [...SPECIES_1, ...[1, 2, 3, 4, 5, 6, 7
 export const EXTRA_OBJECTIVES = {
   firstEvent: 'Answer your first event.',
   genomeNode: 'Buy a Genome node.',
-  threat: 'Keep Defense above the Threat.',
+  threatRaise: 'Raise {resist} to {n} before the {threat}.',
+  threatHold: 'Hold on until the {threat} passes.',
 }

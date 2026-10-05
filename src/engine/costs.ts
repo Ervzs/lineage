@@ -1,4 +1,5 @@
-import { LATE_TRAIT_FACTOR, NUMBER_CLAMP } from '../data/constants'
+import { LATE_TRAIT_FACTOR, LEVEL_COST_MULT, NUMBER_CLAMP } from '../data/constants'
+import { fossilEffect } from './modifiers'
 import type { BuyMode, GameState, ProducerDef, TraitDef } from './types'
 import { newestBorn } from './state'
 
@@ -29,7 +30,12 @@ export const displayCount = (def: ProducerDef, bought: number, biomass: number, 
   mode === 'max' ? Math.max(1, maxAffordable(def, bought, biomass)) : mode
 
 // Late adaptation: base × 250^n, n = species born after the Trait's species.
+// Quick Adaptation lowers both.
 export function traitCost(s: GameState, t: TraitDef): number {
   const n = Math.max(0, newestBorn(s) - t.species)
-  return clamp(t.cost * LATE_TRAIT_FACTOR ** n)
+  return clamp(t.cost * LATE_TRAIT_FACTOR ** n * (1 - fossilEffect(s, 'adapt')))
 }
+
+// Cost of the next level of an owned Trait.
+export const levelCost = (s: GameState, t: TraitDef) =>
+  clamp(traitCost(s, t) * LEVEL_COST_MULT ** ((s.traitLevels[t.id] ?? 0) + 1))

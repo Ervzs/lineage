@@ -31,7 +31,7 @@ export function stepEvents(s: GameState, m: Mods, dt: number) {
     s.tempEffects = s.tempEffects.filter(e => e.remaining > 0)
   }
 
-  if (s.reckoning?.resolved) return
+  if (s.threat?.kind === 'final' && s.threat.resolved) return
   const newest = newestBorn(s)
   if (newest < 1) return
 
