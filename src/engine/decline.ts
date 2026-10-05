@@ -30,7 +30,7 @@ export function checkExtinctions(s: GameState) {
 // afford its first producer, grant exactly that cost so the run can continue.
 export function rescueIfStuck(s: GameState) {
   const k = s.species.findIndex(sp => sp.status === 'active')
-  if (k < 0) return
+  if (k <= 0) return // species 1 has the Absorb button
   const producing = s.species.some(sp => isLiving(sp) && sp.producers[0].amount > 0)
   const first = SPECIES[k].producers[0].baseCost
   if (producing || s.species[k].producers[0].bought > 0 || s.biomass >= first) return
