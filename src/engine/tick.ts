@@ -1,4 +1,4 @@
-import { checkExtinctions, stepDecline } from './decline'
+import { checkExtinctions, rescueIfStuck, stepDecline } from './decline'
 import { stepEvents } from './events'
 import { checkBirth } from './evolution'
 import { computeMods } from './modifiers'
@@ -16,6 +16,7 @@ function step(s: GameState, dt: number) {
   stepProduction(s, computeMods(s), dt)       // 3. production chain
   updatePeaks(s)                              // 4. peak Population
   checkExtinctions(s)                         // 5. extinction and Genome
+  rescueIfStuck(s)
   checkBirth(s)                               // 6. birth
   stepReckoning(s, computeMods(s), dt)        // 7. Reckoning
   checkExtinctEnding(s)

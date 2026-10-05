@@ -54,7 +54,7 @@ export const EVENTS: EventDef[] = [
       {
         id: 'treat', label: 'treat', outcomes: [
           { chance: 0.65, text: 'The treatment works.' },
-          { chance: 0.35, biomassLossPct: 10, populationLossPct: 40, recoverSeconds: 240, text: 'The treatment fails.' },
+          { chance: 0.35, biomassLossPct: 10, populationLossPct: 37, recoverSeconds: 240, text: 'The treatment fails.' },
         ],
       },
     ],
