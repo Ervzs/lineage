@@ -8,13 +8,17 @@ import { totalIncome } from './engine/production'
 import type { BuyMode } from './engine/types'
 import { Header } from './ui/Header'
 import { ObjectiveBar } from './ui/ObjectiveBar'
+import { LineagePanel } from './ui/LineagePanel'
 import { SpeciesPanel } from './ui/SpeciesPanel'
+import { Tabs, type TabId } from './ui/Tabs'
+import { TraitsPanel } from './ui/TraitsPanel'
 
 function Game() {
   const s = useGameState()
   const dispatch = useGameDispatch()
   const [saved, setSaved] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [tab, setTab] = useState<TabId>('species')
 
   const m = useMemo(() => computeMods(s), [s])
   const income = totalIncome(s, m)
@@ -36,6 +40,12 @@ function Game() {
   const onBuy = useCallback((k: number, tier: 0 | 1 | 2) => dispatch({ type: 'BUY_PRODUCER', species: k, tier }), [dispatch])
   const onAbsorb = useCallback(() => dispatch({ type: 'ABSORB' }), [dispatch])
   const onMode = useCallback((mode: BuyMode) => dispatch({ type: 'SET_BUY_MODE', mode }), [dispatch])
+  const onBuyTrait = useCallback((traitId: string) => dispatch({ type: 'BUY_TRAIT', traitId }), [dispatch])
+
+  const tabs: TabId[] = ['species']
+  if (s.revealed.includes('traits') || s.species.some(sp => sp.traitsBought.length)) tabs.push('traits')
+  if (s.species[1].status !== 'locked') tabs.push('lineage')
+  const current = tabs.includes(tab) ? tab : 'species'
 
   return (
     <main className="game">
@@ -56,7 +66,10 @@ function Game() {
         onSettings={onSettings}
       />
       {objective && <ObjectiveBar {...objective} />}
-      <SpeciesPanel state={s} mods={m} onBuy={onBuy} onAbsorb={onAbsorb} onMode={onMode} />
+      {tabs.length > 1 && <Tabs tabs={tabs} current={current} onSelect={setTab} />}
+      {current === 'species' && <SpeciesPanel state={s} mods={m} onBuy={onBuy} onAbsorb={onAbsorb} onMode={onMode} />}
+      {current === 'traits' && <TraitsPanel state={s} onBuy={onBuyTrait} />}
+      {current === 'lineage' && <LineagePanel state={s} />}
     </main>
   )
 }
