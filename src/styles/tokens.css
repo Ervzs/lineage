@@ -1,0 +1,32 @@
+:root {
+  --bg: #0e0f11;
+  --panel: #15171a;
+  --line: #26292e;
+  --text: #d7d9dc;
+  --muted: #7b8088;
+  --accent: #6ee7b7;
+  --loss: #f87171;
+
+  --r-common: #9aa0a6;
+  --r-uncommon: #4ade80;
+  --r-rare: #60a5fa;
+  --r-epic: #c084fc;
+  --r-legendary: #fbbf24;
+  --r-mythic: #fb7185;
+
+  --font: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --fs-base: 15px;
+  --fs-small: 13px;
+  --fs-title: 18px;
+  --fs-stat: 20px;
+  --lh: 1.55;
+
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s5: 24px;
+  --s6: 32px;
+
+  --radius: 6px;
+}

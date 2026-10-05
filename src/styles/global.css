@@ -1,0 +1,139 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: var(--lh);
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: var(--s5) var(--s4) var(--s6);
+}
+
+p {
+  margin: 0;
+}
+
+button {
+  font: inherit;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  border-radius: var(--radius);
+  padding: var(--s1) var(--s3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+button:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+}
+
+button:active:not(:disabled) {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+button:disabled {
+  color: var(--muted);
+  border-color: var(--line);
+  cursor: default;
+}
+
+button:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+textarea {
+  width: 100%;
+  min-height: 90px;
+  font: inherit;
+  font-size: var(--fs-small);
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s2);
+  resize: vertical;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.accent {
+  color: var(--accent);
+}
+
+.loss {
+  color: var(--loss);
+}
+
+.small {
+  font-size: var(--fs-small);
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--s4);
+}
+
+.stack > * + * {
+  margin-top: var(--s3);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s2) var(--s4);
+}
+
+.spread {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s2) var(--s4);
+}
+
+.section-title {
+  margin: 0;
+  font-size: var(--fs-small);
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+
+.bar {
+  letter-spacing: -0.04em;
+  white-space: pre;
+}
+
+.r-common { color: var(--r-common); }
+.r-uncommon { color: var(--r-uncommon); }
+.r-rare { color: var(--r-rare); }
+.r-epic { color: var(--r-epic); }
+.r-legendary { color: var(--r-legendary); }
+.r-mythic { color: var(--r-mythic); }
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
