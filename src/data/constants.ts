@@ -9,7 +9,7 @@ export const NUMBER_CLAMP = 1e300
 export const BALANCE_CEILING = 1e66
 
 // Species anchors B_k (cost of the first Tier 1 producer) and population scales.
-export const ANCHORS = [10, 1e4, 1e7, 1.58e10, 1.87e13, 6.25e16, 3.73e19, 2.12e22]
+export const ANCHORS = [10, 2.66e4, 8.65e7, 2.69e11, 8.99e14, 3e18, 1.13e22, 3.97e25]
 export const UNIT_SCALES = [1, 1e3, 1e6, 1e9, 1e12, 1e15, 1e18, 1e21]
 export const DECLINE_SECONDS = [300, 450, 600, 900, 1200, 1800, 2400, 1800]
 export const DEFENSE_UNITS = [4, 6, 8, 12, 18, 26, 36, 50]
@@ -42,7 +42,7 @@ export const GIFT_CAP = 60
 export const MUTATION_DEFENSE_CAP = 100
 
 // Genome
-export const GENOME_FACTOR = 4
+export const GENOME_FACTOR = 5.5
 
 // Events
 export const EVENT_WINDOW = 90

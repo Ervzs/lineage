@@ -1,6 +1,6 @@
 // npm run balance — simulates full runs with a bot and checks the balance laws (PLAN.md section 20).
 import { writeFileSync } from 'node:fs'
-import { BALANCE_CEILING, EVO_NEEDED, THREAT_LEVEL } from '../src/data/constants'
+import { BALANCE_CEILING, EVO_NEEDED, GENOME_FACTOR, THREAT_LEVEL } from '../src/data/constants'
 import { EVENT_BY_ID, EVENTS } from '../src/data/events'
 import { GENOME_NODES } from '../src/data/genomeNodes'
 import { RARITIES } from '../src/data/mutations'
@@ -194,7 +194,7 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
         m = computeMods(s)
         income = totalIncome(s, m)
         const tCost = target && s.species[k2].status === 'active' ? traitCost(s, TRAITS.find(x => x.id === target)!) : Infinity
-        const reserve = tCost <= Math.max(income, 1) * 90 ? tCost : 0
+        const reserve = tCost <= Math.max(income, 1) * 30 ? tCost : 0
         let best = -1
         let bestPay = Infinity
         for (const tier of [0, 1, 2]) {
@@ -260,7 +260,7 @@ function simulate(policy: Policy, answer: 'default' | 'best', seed: number): Run
     defenseParts: `traits ${m.defenseTraits} + genome ${m.defenseGenome} + mutations ${m.defenseMutations}`,
     species,
     peak: s.species.map(sp => sp.peakPopulation),
-    genomeBySpecies: s.species.map(sp => (sp.genomePaid ? Math.round(3 * Math.log10(Math.max(sp.peakPopulation, 1))) : 0)),
+    genomeBySpecies: s.species.map(sp => (sp.genomePaid ? Math.round(GENOME_FACTOR * Math.log10(Math.max(sp.peakPopulation, 1))) : 0)),
     defenseBySpecies,
     longestWait,
     longestWaitAt,
