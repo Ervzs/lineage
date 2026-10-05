@@ -411,3 +411,173 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* ---------- mutations ---------- */
+
+.mutation-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s1) var(--s4);
+  padding: var(--s1) 0;
+}
+
+.mutation-row > :first-child {
+  min-width: 24ch;
+}
+
+.mutation-foot {
+  border-top: 1px solid var(--line);
+  padding-top: var(--s3);
+}
+
+/* ---------- events ---------- */
+
+.event {
+  border-left-width: 3px;
+}
+
+.event-loss {
+  border-left-color: var(--loss);
+}
+
+.event-boost {
+  border-left-color: var(--accent);
+}
+
+.event > * + * {
+  margin-top: var(--s2);
+}
+
+.event-name {
+  margin: 0;
+  font-size: var(--fs-base);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.event-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2);
+  padding-top: var(--s1);
+}
+
+.event-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  white-space: normal;
+  padding: var(--s2) var(--s3);
+}
+
+.event-option.loss {
+  color: var(--loss);
+  border-color: color-mix(in srgb, var(--loss) 55%, transparent);
+}
+
+.event-option.loss:hover {
+  background: color-mix(in srgb, var(--loss) 12%, transparent);
+}
+
+.event-label {
+  font-weight: 700;
+}
+
+.event-effect {
+  font-size: var(--fs-small);
+  color: var(--text);
+}
+
+/* ---------- reckoning ---------- */
+
+.reckoning {
+  border-color: color-mix(in srgb, var(--loss) 45%, var(--line));
+}
+
+/* ---------- genome ---------- */
+
+.genome-list > * + * {
+  margin-top: var(--s2);
+}
+
+.genome-node {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--s2) var(--s4);
+}
+
+.genome-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.genome-buy {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s3);
+  margin-left: auto;
+}
+
+/* ---------- log ---------- */
+
+.log-row {
+  display: flex;
+  gap: var(--s3);
+  padding: var(--s1) 0;
+}
+
+.log-time {
+  flex: 0 0 9ch;
+  text-align: right;
+  padding-top: 1px;
+}
+
+.log-story {
+  color: var(--text);
+}
+
+.log-event,
+.log-system {
+  color: var(--muted);
+}
+
+/* ---------- settings and end ---------- */
+
+.danger {
+  color: var(--loss);
+  border-color: color-mix(in srgb, var(--loss) 55%, transparent);
+}
+
+.danger:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--loss) 12%, transparent);
+}
+
+.end-title {
+  margin: 0;
+  font-size: 26px;
+  letter-spacing: 0.04em;
+}
+
+.end-stats {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--s1) var(--s5);
+  margin: 0;
+}
+
+.end-pair {
+  display: contents;
+}
+
+.end-stats dt {
+  color: var(--muted);
+}
+
+.end-stats dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
