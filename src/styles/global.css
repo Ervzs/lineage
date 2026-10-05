@@ -21,7 +21,14 @@ body {
   padding: var(--s5) var(--s4) var(--s6);
 }
 
-p {
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd {
   margin: 0;
 }
 
@@ -112,7 +119,6 @@ textarea {
 }
 
 .section-title {
-  margin: 0;
   font-size: var(--fs-small);
   font-weight: 400;
   letter-spacing: 0.18em;
@@ -145,7 +151,6 @@ textarea {
 }
 
 .title {
-  margin: 0;
   font-size: var(--fs-title);
   font-weight: 700;
   letter-spacing: 0.32em;
@@ -220,13 +225,12 @@ textarea {
 }
 
 .bar-empty {
-  color: var(--line);
+  color: color-mix(in srgb, var(--muted) 55%, transparent);
 }
 
 /* ---------- panels ---------- */
 
 .panel-title {
-  margin: 0;
   font-size: var(--fs-title);
   font-weight: 700;
 }
@@ -381,7 +385,6 @@ textarea {
 .lineage,
 .plain-list {
   list-style: none;
-  margin: 0;
   padding: 0;
 }
 
@@ -449,7 +452,6 @@ textarea {
 }
 
 .event-name {
-  margin: 0;
   font-size: var(--fs-base);
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -557,7 +559,6 @@ textarea {
 }
 
 .end-title {
-  margin: 0;
   font-size: 26px;
   letter-spacing: 0.04em;
 }
@@ -566,7 +567,6 @@ textarea {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: var(--s1) var(--s5);
-  margin: 0;
 }
 
 .end-pair {
@@ -578,6 +578,5 @@ textarea {
 }
 
 .end-stats dd {
-  margin: 0;
   font-variant-numeric: tabular-nums;
 }

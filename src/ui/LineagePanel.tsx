@@ -24,13 +24,13 @@ export const LineagePanel = memo(function LineagePanel({ state }: { state: GameS
               )}
               {sp.status === 'declining' && (
                 <>
-                  <span className="muted">pop <span className="num">{fmt(speciesPopulation(state, k))}</span></span>
+                  <span className="muted">pop <span className="num">{fmt(Math.floor(speciesPopulation(state, k)))}</span></span>
                   <span><TextBar value={sp.vitality} width={10} className="loss" /> <span className="muted">vitality {Math.round(sp.vitality * 100)}%</span></span>
                 </>
               )}
               {sp.status === 'active' && (
                 <>
-                  <span className="muted">pop <span className="num">{fmt(speciesPopulation(state, k))}</span></span>
+                  <span className="muted">pop <span className="num">{fmt(Math.floor(speciesPopulation(state, k)))}</span></span>
                   <span className="muted">traits <span className="num">{sp.traitsBought.length} / 9</span></span>
                 </>
               )}

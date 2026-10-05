@@ -39,7 +39,7 @@ export const Header = memo(function Header(p: Props) {
         {p.showRate && (
           <div className="stat">
             <span className="stat-label">Population</span>
-            <span className="stat-value">{fmt(p.population)}</span>
+            <span className="stat-value">{fmt(Math.floor(p.population))}</span>
             {p.health < 1 && <span className="stat-sub loss">(health {Math.round(p.health * 100)}%)</span>}
           </div>
         )}
