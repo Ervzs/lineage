@@ -31,7 +31,13 @@ export function fmt(n: number): string {
   return `${sign}${Number(v.toPrecision(3))} ${NAMES[idx]}`
 }
 
-export const fmtPct = (fraction: number) => `${fmt(fraction * 100)}%`
+export const fmtPct = (fraction: number) => `${Math.round(fraction * 100)}%`
+
+// Whole numbers, so the width does not jump between 1 and 2 decimals: 12, 1,234, 1.24 million.
+export const fmtInt = (n: number) => (Math.abs(n) < 1e6 ? thousands(Math.floor(n)) : fmt(n))
+
+// Rates always carry one decimal below 100: 0.4, 12.0, 340.
+export const fmtRate = (n: number) => (Math.abs(n) < 100 ? n.toFixed(1) : fmtInt(n))
 
 const pad = (n: number) => String(n).padStart(2, '0')
 

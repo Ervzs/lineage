@@ -1,181 +1,105 @@
-export type Rarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'mythic'
-export type Branch = 'growth' | 'survival' | 'cunning'
-export type SpeciesStatus = 'locked' | 'active' | 'declining' | 'extinct'
-export type MutationType = 'production' | 'chain' | 'defense' | 'luck'
-export type BuyMode = 1 | 10 | 'max'
-export type Resist = 'immunity' | 'toughness' | 'endurance'
+// ---------- stage data ----------
 
-export type EffectTarget =
-  | 'tier1.output' | 'tier2.output' | 'tier3.output'
-  | 'resist.immunity' | 'resist.toughness' | 'resist.endurance'
-  | 'event.lossMult'
-  | 'luck.points'
-  | 'event.riskSuccess'
-  | 'gift.chance'
+// Conditions an ambient log line can wait for.
+export type Cond = 'growing' | 'shrinking' | 'hungry' | 'plenty' | 'lowWild'
 
-export interface Effect { target: EffectTarget; op: 'mul' | 'add'; value: number }
-
-export interface ProducerDef {
-  name: string
-  baseCost: number
-  growth: number
-  baseRate: number
-}
-
-export interface SpeciesDef {
-  index: number
+export interface ResourceDef {
   id: string
   name: string
-  era: string
-  producers: [ProducerDef, ProducerDef, ProducerDef]
-  anchor: number
-  unitScale: number
-  declineSeconds: number
-  defenseUnit: number
-  birthText: string
-  extinctText: string
+  food: boolean            // eaten by the population; otherwise a material that is only stored
+  size?: number            // relative amount in the wild (default 1)
 }
 
-export interface TraitDef {
+export type AdaptEffect =
+  | { kind: 'land'; res: string; mul: number }   // more of this resource in the wild
+  | { kind: 'need'; res: string; mul: number }   // each individual needs less of it
+  | { kind: 'birth'; mul: number }
+  | { kind: 'death'; mul: number }
+  | { kind: 'share'; add: number }               // more of what is gathered is saved
+
+export interface AdaptationDef {
   id: string
-  species: number
-  branch: Branch
-  tier: 1 | 2 | 3
   name: string
-  flavor: string
-  cost: number
-  evoPoints: number
-  requires: string[]       // all of these
-  requiresAny: string[]    // at least one of these (tier 3 cross link)
-  effects: Effect[]
+  role: 'key' | 'protect' | 'help'
+  blurb: string            // what it is in real life
+  story: string            // log line when bought
+  cost: Record<string, number>
+  minPop?: number
+  effects: AdaptEffect[]
 }
 
-export interface GenomeNodeDef {
-  id: string; name: string; cost: number; resist: Partial<Record<Resist, number>>; requires: string[]; flavor: string
-}
+export interface AmbientLine { text: string; when?: Cond; has?: string }
 
-export interface MutationInstance {
-  id: string
-  type: MutationType
-  rarity: Rarity
-  value: number
-  traitId: string
-  species?: number
-  resist?: Resist             // defense type only
-}
-
-export interface Outcome {
-  chance: number
-  biomassLossPct?: number
-  biomassGainSeconds?: number
-  productionMult?: number
-  durationSeconds?: number
-  populationLossPct?: number
-  recoverSeconds?: number
+export interface LifeEventDef {
   text: string
+  label: string            // short name shown in "why population is changing"
+  seconds?: number
+  birth?: number
+  death?: number
+  land?: number
+  popLoss?: number         // fraction lost at once
+  landGain?: number        // fraction of each wild cap added at once
 }
 
-export interface EventOption {
-  id: string
-  label: string
-  outcomes: Outcome[]
+export interface DisasterDef {
+  clues: [string, string, string, string]
+  strike: string
+  survive: string
+  fail: string
+  seconds: number
 }
 
-export interface EventDef {
-  id: string
+export interface StageDef {
+  index: number
   name: string
-  kind: 'boost' | 'loss'
-  minSpecies: number       // 1-based species number
-  weight: number
-  options: EventOption[]
-  defaultOptionId: string
-  flavor: string
+  youAre: string
+  unit: string             // plural noun for the population: cells, fish, people
+  about: string            // what is happening, in plain words
+  evolveText: string       // logged when moving to the next stage
+  resources: ResourceDef[]
+  adaptations: AdaptationDef[]
+  disaster: DisasterDef
+  ambient: AmbientLine[]
+  events: LifeEventDef[]
 }
 
-export interface ThreatDef { id: string; name: string; text: string; checks: Resist[] }
-
-export interface EraThreatDef { species: number; id: string; name: string; text: string; failText: string; checks: Resist[] }
-
-export type ObjectiveCheck =
-  | { kind: 'biomass'; n: number }
-  | { kind: 'bought'; tier: 0 | 1 | 2; n: number }
-  | { kind: 'traits'; n: number }
-  | { kind: 'born' }
-
-export interface ObjectiveDef { species: number; text: string; check: ObjectiveCheck }
-
-export interface ActiveEvent { id: string; remaining: number }
-
-export interface ProducerState { bought: number; amount: number }
-
-export interface SpeciesState {
-  status: SpeciesStatus
-  producers: [ProducerState, ProducerState, ProducerState]
-  traitsBought: string[]
-  evoPoints: number
-  vitality: number
-  declineElapsed: number
-  peakPopulation: number
-  genomePaid: boolean
-}
+// ---------- game state ----------
 
 export interface LogEntry { t: number; text: string; kind: 'story' | 'event' | 'system' }
 
-// An era Threat (end of species 1-7) or the final Reckoning (species 8).
-export interface Threat {
-  kind: 'era' | 'final'
-  id: string
-  species: number
-  countdown: number
-  requirements: Partial<Record<Resist, number>>
-  resolved: boolean
-}
+export interface ActiveEffect { label: string; birth: number; death: number; land: number; remaining: number }
 
-export interface Meta {
-  epoch: number
-  fossils: number
-  fossilsEarned: number
-  bestEpoch: number           // highest Epoch survived (0 = none)
-  upgrades: Record<string, number>
-}
+export interface StageRecord { stage: number; peak: number; seconds: number }
+
+export interface Disaster { elapsed: number; clues: number; struck: boolean }
 
 export interface GameState {
   version: number
   seed: number
   rngState: number
   playTime: number
-  biomass: number
-  genome: number
-  genomeEarned: number
-  genomeNodes: string[]
-  species: SpeciesState[]
-  mutations: MutationInstance[]
-  health: number
-  healthRecoverRate: number
-  activeEvent: ActiveEvent | null
+  stage: number
+  stageTime: number
+  pop: number
+  peakPop: number
+  wild: Record<string, number>
+  store: Record<string, number>
+  owned: string[]
+  disaster: Disaster | null
+  effects: ActiveEffect[]
+  nextLineIn: number
   nextEventIn: number
-  tempEffects: { id: string; productionMult: number; remaining: number }[]
-  threat: Threat | null
-  traitLevels: Record<string, number>
-  meta: Meta
-  objectiveIndex: number
-  revealed: string[]
+  recent: string[]
+  flags: string[]
+  history: StageRecord[]
   log: LogEntry[]          // newest first
   ending: null | 'survived' | 'extinct'
-  stats: { totalBiomass: number; eventsSeen: number; eventsResolved: number; biomassLost: number }
-  settings: { buyMode: BuyMode }
+  best: number             // furthest stage reached in any run (1-based)
 }
 
 export type Action =
   | { type: 'TICK'; dt: number }
-  | { type: 'ABSORB' }
-  | { type: 'BUY_PRODUCER'; species: number; tier: 0 | 1 | 2 }
-  | { type: 'BUY_TRAIT'; traitId: string }
-  | { type: 'LEVEL_TRAIT'; traitId: string }
-  | { type: 'BUY_FOSSIL_UPGRADE'; id: string }
-  | { type: 'REBIRTH' }
-  | { type: 'BUY_GENOME_NODE'; nodeId: string }
-  | { type: 'RESOLVE_EVENT'; optionId: string }
-  | { type: 'SET_BUY_MODE'; mode: BuyMode }
+  | { type: 'BUY_ADAPTATION'; id: string }
+  | { type: 'NEW_RUN' }
   | { type: 'IMPORT_SAVE'; data: string }
   | { type: 'HARD_RESET' }

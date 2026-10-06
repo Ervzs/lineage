@@ -1,24 +1,13 @@
-import { ABSORB_AMOUNT } from '../data/constants'
-import { SPECIES } from '../data/species'
-import { buyCount, producerCost } from './costs'
-import { buyTrait, canBuyTrait, canLevelTrait, levelTrait } from './evolution'
-import { resolveEvent } from './events'
-import { buyNode, canBuyNode } from './genome'
-import { computeMods } from './modifiers'
-import { stepObjectives, stepReveals } from './objectives'
-import { buyUpgrade, canBuyUpgrade, rebirth } from './rebirth'
+import { STAGES, adaptCost, adaptMinPop } from '../data/stages'
 import { importSave } from './save'
-import { draft, initialState } from './state'
+import { addLog, draft, initialState } from './state'
 import { tick } from './tick'
 import type { Action, GameState } from './types'
 
-// Runs a change on a draft so the incoming state is never mutated.
-function edit(state: GameState, fn: (s: GameState) => void): GameState {
-  const s = draft(state)
-  fn(s)
-  stepObjectives(s)
-  stepReveals(s)
-  return s
+export function canBuy(s: GameState, id: string): boolean {
+  const a = STAGES[s.stage].adaptations.find(x => x.id === id)
+  if (!a || s.ending || s.owned.includes(id) || s.pop < adaptMinPop(s.stage, a)) return false
+  return Object.entries(adaptCost(s.stage, a)).every(([r, n]) => (s.store[r] ?? 0) >= n)
 }
 
 export function gameReducer(state: GameState, action: Action): GameState {
@@ -26,51 +15,19 @@ export function gameReducer(state: GameState, action: Action): GameState {
     case 'TICK':
       return tick(state, action.dt)
 
-    case 'ABSORB':
-      if (state.species[0].status !== 'active' || state.ending) return state
-      return edit(state, s => {
-        s.biomass += ABSORB_AMOUNT
-        s.stats.totalBiomass += ABSORB_AMOUNT
-      })
-
-    case 'BUY_PRODUCER': {
-      const sp = state.species[action.species]
-      if (!sp || sp.status !== 'active' || state.ending) return state
-      const def = SPECIES[action.species].producers[action.tier]
-      const n = buyCount(def, sp.producers[action.tier].bought, state.biomass, state.settings.buyMode)
-      if (n <= 0) return state
-      return edit(state, s => {
-        const q = s.species[action.species].producers[action.tier]
-        s.biomass -= producerCost(def, q.bought, n)
-        q.bought += n
-        q.amount += n
-      })
+    case 'BUY_ADAPTATION': {
+      if (!canBuy(state, action.id)) return state
+      const s = draft(state)
+      const a = STAGES[s.stage].adaptations.find(x => x.id === action.id)!
+      const cost = adaptCost(s.stage, a)
+      s.store = Object.fromEntries(Object.entries(s.store).map(([r, n]) => [r, n - (cost[r] ?? 0)]))
+      s.owned = [...s.owned, a.id]
+      addLog(s, a.story, 'story')
+      return s
     }
 
-    case 'BUY_TRAIT':
-      if (!canBuyTrait(state, action.traitId)) return state
-      return edit(state, s => buyTrait(s, action.traitId))
-
-    case 'LEVEL_TRAIT':
-      if (!canLevelTrait(state, action.traitId)) return state
-      return edit(state, s => levelTrait(s, action.traitId))
-
-    case 'BUY_FOSSIL_UPGRADE':
-      return canBuyUpgrade(state, action.id) ? buyUpgrade(state, action.id) : state
-
-    case 'REBIRTH':
-      return state.ending ? rebirth(state) : state
-
-    case 'BUY_GENOME_NODE':
-      if (state.ending || !canBuyNode(state, action.nodeId)) return state
-      return edit(state, s => buyNode(s, action.nodeId))
-
-    case 'RESOLVE_EVENT':
-      if (!state.activeEvent) return state
-      return edit(state, s => resolveEvent(s, computeMods(s), action.optionId, true))
-
-    case 'SET_BUY_MODE':
-      return { ...state, settings: { ...state.settings, buyMode: action.mode } }
+    case 'NEW_RUN':
+      return initialState(undefined, state.best)
 
     case 'IMPORT_SAVE':
       return importSave(action.data) ?? state
