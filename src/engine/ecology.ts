@@ -1,5 +1,5 @@
-import { BIRTH, DEATH, MIN_POP, STARVE, STORE_SHARE } from '../data/constants'
-import { STAGES, resBase } from '../data/stages'
+import { BIRTH, DEATH, GATHER_AMOUNT, MIN_POP, SPARK_COST, STAGE_SCALE, STARVE, STORE_SHARE } from '../data/constants'
+import { STAGES, adaptCost, adaptMinPop, resBase, startPop } from '../data/stages'
 import type { Cond, GameState, ResourceDef } from './types'
 
 export interface Mods {
@@ -90,6 +90,7 @@ export function stepEcology(s: GameState, dt: number) {
     s.wild = { ...s.wild, [r.def.id]: r.wild + r.grown - r.gathered }
     s.store = { ...s.store, [r.def.id]: (s.store[r.def.id] ?? 0) + r.stored }
   }
+  if (s.pop === 0) return   // no life yet: only the wild regrows
   s.pop = Math.max(MIN_POP, s.pop + f.births - f.natural - f.hunger)
   s.peakPop = Math.max(s.peakPop, s.pop)
 }
@@ -106,4 +107,34 @@ export function conditions(s: GameState, f: Flows = perSecond(s)): Set<Cond> {
   if (f.fed > 0.999 && f.res.every(r => r.wild > r.cap * 0.5)) c.add('plenty')
   if (f.res.some(r => r.wild < r.cap * 0.15)) c.add('lowWild')
   return c
+}
+
+export function canBuy(s: GameState, id: string): boolean {
+  const a = STAGES[s.stage].adaptations.find(x => x.id === id)
+  if (!a || s.ending || s.pop === 0 || s.owned.includes(id) || s.pop < adaptMinPop(s.stage, a)) return false
+  return Object.entries(adaptCost(s.stage, a)).every(([r, n]) => (s.store[r] ?? 0) >= n)
+}
+
+// ---------- stage 1 opening: gather by hand, then spark life ----------
+
+export const canGather = (s: GameState) => !!STAGES[s.stage].spark && !s.ending
+export const sparkCost = (k: number) => SPARK_COST * STAGE_SCALE[k]
+export const canSpark = (s: GameState) =>
+  canGather(s) && s.pop === 0 && STAGES[s.stage].resources.every(r => (s.store[r.id] ?? 0) >= sparkCost(s.stage))
+
+// Each click takes a little of every resource from the wild.
+export function gather(s: GameState) {
+  for (const r of STAGES[s.stage].resources) {
+    const n = Math.min(GATHER_AMOUNT * STAGE_SCALE[s.stage], s.wild[r.id] ?? 0)
+    s.wild = { ...s.wild, [r.id]: s.wild[r.id] - n }
+    s.store = { ...s.store, [r.id]: (s.store[r.id] ?? 0) + n }
+  }
+}
+
+export function spark(s: GameState) {
+  const cost = sparkCost(s.stage)
+  s.store = Object.fromEntries(Object.entries(s.store).map(([r, n]) => [r, n - cost]))
+  s.pop = startPop(s.stage)
+  s.peakPop = s.pop
+  s.nextLineIn = 12
 }

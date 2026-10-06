@@ -1,6 +1,6 @@
 import { EVENT_GAP, LINE_GAP, POP_MILESTONES, RECENT_MAX } from '../data/constants'
 import { STAGES, startPop } from '../data/stages'
-import { conditions, perSecond } from './ecology'
+import { canBuy, conditions, perSecond } from './ecology'
 import { fmtInt } from './format'
 import { nextRandom, pickWeighted } from './rng'
 import { addFlag, addLog } from './state'
@@ -72,7 +72,24 @@ function milestones(s: GameState) {
   }
 }
 
+// Stage 1 opens the screen one piece at a time, each with a line that explains it.
+export const revealed = (s: GameState, f: 'env' | 'adapt') => s.stage > 0 || s.flags.includes(f)
+
+function reveals(s: GameState) {
+  if (s.stage > 0) return
+  if (!revealed(s, 'env') && perSecond(s).res.some(r => r.wild < r.cap * 0.7)) {
+    addFlag(s, 'env')
+    addLog(s, 'The cells are using up minerals and heat faster than the sea makes them. The Environment panel now shows what is left in the wild.', 'system')
+  }
+  if (!revealed(s, 'adapt') && STAGES[0].adaptations.some(a => canBuy(s, a.id))) {
+    addFlag(s, 'adapt')
+    addLog(s, 'Your cells have saved enough to change. Open the Adaptations tab to choose how they evolve.', 'system')
+  }
+}
+
 export function stepStory(s: GameState, dt: number) {
+  if (s.pop === 0) return   // nothing to tell until life begins
+  reveals(s)
   if (s.effects.length) {
     s.effects = s.effects.map(e => ({ ...e, remaining: e.remaining - dt })).filter(e => e.remaining > 0)
   }
@@ -81,7 +98,8 @@ export function stepStory(s: GameState, dt: number) {
     ambient(s)
     s.nextLineIn = between(s, LINE_GAP)
   }
-  s.nextEventIn -= dt
+  // Random happenings wait until the player has made a first change.
+  if (s.stage > 0 || s.owned.length) s.nextEventIn -= dt
   if (s.nextEventIn <= 0) {
     lifeEvent(s)
     s.nextEventIn = between(s, EVENT_GAP)

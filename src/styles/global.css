@@ -328,6 +328,21 @@ textarea {
   margin-top: var(--s1);
 }
 
+.start { margin-bottom: var(--s3); }
+
+.gather {
+  padding: 14px 28px;
+  font-size: 17px;
+}
+
+.gather:active:not(:disabled) { transform: translateY(1px); }
+
+.spark {
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 4px solid var(--accent);
+}
+
 .adaptations {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

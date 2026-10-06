@@ -33,16 +33,16 @@ export const Header = memo(function Header(p: Props) {
       </p>
 
       <div className="stats">
-        <div className="stat stat-main">
+        {p.pop > 0 && <div className="stat stat-main">
           <span className="stat-label">Population</span>
           <span className="stat-value">{fmtInt(p.pop)}</span>
           <span className={`stat-sub ${net >= 0 ? 'good' : 'loss'}`}>{signed(net)}/s {st.unit}</span>
-        </div>
+        </div>}
         {p.flows.res.map(r => (
           <div key={r.def.id} className="stat">
             <span className="stat-label">{r.def.name}</span>
             <span className="stat-value">{fmtInt(p.store[r.def.id] ?? 0)}</span>
-            <span className="stat-sub good">+{fmtRate(r.stored)}/s saved</span>
+            {p.pop > 0 && <span className="stat-sub good">+{fmtRate(r.stored)}/s saved</span>}
           </div>
         ))}
       </div>

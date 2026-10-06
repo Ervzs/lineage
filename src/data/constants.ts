@@ -20,6 +20,10 @@ export const STARVE = 0.05
 export const START_POP = 10
 export const MIN_POP = 2
 
+// Stage 1 starts with no life: the player gathers by hand, then sparks the first cell.
+export const GATHER_AMOUNT = 1     // base units of each resource per click
+export const SPARK_COST = 25       // base units of each resource
+
 // Per stage: size of all numbers (cosmetic) and how slow the stage is (costs x pace).
 export const STAGE_SCALE = [100, 1000, 50, 20, 10, 10, 20, 30, 10]
 export const STAGE_PACE = [1.25, 0.97, 1.14, 1.93, 1.67, 2, 2.24, 3.2, 3.5]

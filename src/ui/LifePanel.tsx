@@ -10,6 +10,8 @@ interface Props {
   owned: string[]
   flows: Flows
   effects: ActiveEffect[]
+  alive: boolean
+  showEnv: boolean
 }
 
 function effectText(e: ActiveEffect) {
@@ -20,7 +22,7 @@ function effectText(e: ActiveEffect) {
   return parts.join(', ')
 }
 
-export const LifePanel = memo(function LifePanel({ stage, owned, flows: f, effects }: Props) {
+export const LifePanel = memo(function LifePanel({ stage, owned, flows: f, effects, alive, showEnv }: Props) {
   const st = STAGES[stage]
   const have = st.adaptations.filter(a => owned.includes(a.id))
   const deaths = f.natural + f.hunger
@@ -28,8 +30,8 @@ export const LifePanel = memo(function LifePanel({ stage, owned, flows: f, effec
   return (
     <div className="stack life">
       <section className="panel stack">
-        <h2 className="panel-title">Your species</h2>
-        <p className="lead">{st.youAre}</p>
+        <h2 className="panel-title">{alive ? 'Your species' : 'The world'}</h2>
+        {alive && <p className="lead">{st.youAre}</p>}
         <p className="muted">{st.about}</p>
         {have.length > 0 && (
           <div className="stack">
@@ -41,7 +43,7 @@ export const LifePanel = memo(function LifePanel({ stage, owned, flows: f, effec
         )}
       </section>
 
-      <section className="panel stack">
+      {alive && <section className="panel stack">
         <div className="spread">
           <h2 className="panel-title">Why the population is changing</h2>
           <span className={`state ${status === 'Shrinking' ? 'state-old' : 'state-active'}`}>{status}</span>
@@ -69,9 +71,9 @@ export const LifePanel = memo(function LifePanel({ stage, owned, flows: f, effec
           ))}
         </ul>
         <p className="muted small">More food in the wild means more births. Too many {st.unit} eat the wild food faster than it grows back, and then they start to starve.</p>
-      </section>
+      </section>}
 
-      <section className="panel stack">
+      {showEnv && <section className="panel stack">
         <h2 className="panel-title">Environment</h2>
         {f.res.map(r => (
           <div key={r.def.id} className="resource">
@@ -89,7 +91,7 @@ export const LifePanel = memo(function LifePanel({ stage, owned, flows: f, effec
             </div>
           </div>
         ))}
-      </section>
+      </section>}
     </div>
   )
 })

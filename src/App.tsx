@@ -2,13 +2,14 @@ import { useCallback, useMemo, useState } from 'react'
 import { GameProvider, hardReset, saveNow, useGameDispatch, useGameState } from './context/GameContext'
 import { STAGES } from './data/stages'
 import { keySteps, keysOwned } from './engine/disaster'
-import { perSecond } from './engine/ecology'
-import { canBuy } from './engine/reducer'
+import { canBuy, canSpark, perSecond } from './engine/ecology'
+import { revealed } from './engine/story'
 import type { GameState } from './engine/types'
 import { AdaptationsPanel } from './ui/AdaptationsPanel'
 import { EndScreen } from './ui/EndScreen'
 import { Header } from './ui/Header'
 import { HistoryPanel } from './ui/HistoryPanel'
+import { StartPanel } from './ui/StartPanel'
 import { LifePanel } from './ui/LifePanel'
 import { LogPanel } from './ui/LogPanel'
 import { ObjectiveBar } from './ui/ObjectiveBar'
@@ -20,6 +21,10 @@ function hint(s: GameState) {
   const st = STAGES[s.stage]
   const keys = keySteps(s.stage).length
   const done = keysOwned(s)
+  if (s.pop === 0) {
+    return { text: canSpark(s) ? 'You have enough. Start life.' : 'Click Gather chemicals to collect minerals and heat.' }
+  }
+  if (!revealed(s, 'adapt')) return { text: `Watch your ${st.unit}. The log tells you what they are doing.` }
   if (st.adaptations.some(a => canBuy(s, a.id))) return { text: 'You can afford an adaptation. Open the adaptations tab.' }
   if (!st.adaptations.some(a => s.owned.includes(a.id))) {
     return { text: `Your ${st.unit} save part of the food they gather. When enough is saved, buy an adaptation.` }
@@ -43,6 +48,8 @@ function Game() {
     setTimeout(() => setSaved(false), 1200)
   }, [s])
   const onSettings = useCallback(() => setSettingsOpen(o => !o), [])
+  const onGather = useCallback(() => dispatch({ type: 'GATHER' }), [dispatch])
+  const onSpark = useCallback(() => dispatch({ type: 'SPARK' }), [dispatch])
   const onBuy = useCallback((id: string) => dispatch({ type: 'BUY_ADAPTATION', id }), [dispatch])
   const onImport = useCallback((data: string) => dispatch({ type: 'IMPORT_SAVE', data }), [dispatch])
   const onReset = useCallback(() => {
@@ -54,7 +61,8 @@ function Game() {
     setTab('life')
   }, [dispatch])
 
-  const tabs: TabId[] = ['life', 'adaptations']
+  const tabs: TabId[] = ['life']
+  if (revealed(s, 'adapt')) tabs.push('adaptations')
   if (s.history.length) tabs.push('history')
   const current = tabs.includes(tab) ? tab : 'life'
 
@@ -81,7 +89,10 @@ function Game() {
             <ObjectiveBar {...hint(s)} />
             <Tabs tabs={tabs} current={current} onSelect={setTab} />
             <div className="content">
-              {current === 'life' && <LifePanel stage={s.stage} owned={s.owned} flows={flows} effects={s.effects} />}
+              {current === 'life' && STAGES[s.stage].spark && <StartPanel store={s.store} alive={s.pop > 0} onGather={onGather} onSpark={onSpark} />}
+              {current === 'life' && (
+                <LifePanel stage={s.stage} owned={s.owned} flows={flows} effects={s.effects} alive={s.pop > 0} showEnv={revealed(s, 'env')} />
+              )}
               {current === 'adaptations' && <AdaptationsPanel state={s} onBuy={onBuy} />}
               {current === 'history' && <HistoryPanel history={s.history} />}
             </div>

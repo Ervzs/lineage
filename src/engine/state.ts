@@ -35,7 +35,7 @@ export function enterStage(s: GameState, k: number) {
   const st = STAGES[k]
   s.stage = k
   s.stageTime = 0
-  s.pop = startPop(k)
+  s.pop = st.spark ? 0 : startPop(k)
   s.peakPop = s.pop
   s.wild = Object.fromEntries(st.resources.map(r => [r.id, resBase(k, r).cap]))
   s.store = Object.fromEntries(st.resources.map(r => [r.id, 0]))
@@ -47,7 +47,8 @@ export function enterStage(s: GameState, k: number) {
   s.nextEventIn = 100
   s.best = Math.max(s.best, k + 1)
   addLog(s, `Stage ${k + 1} of ${STAGES.length}: ${st.name}. ${st.about}`, 'event')
-  addLog(s, `You are: ${st.youAre}`, 'story')
+  if (st.spark) addLog(s, 'Nothing is alive yet. Gather chemicals from the warm water to begin.', 'story')
+  else addLog(s, `You are: ${st.youAre}`, 'story')
 }
 
 // Shallow copy of everything a tick or purchase may change in place.

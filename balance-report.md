@@ -2,48 +2,50 @@
 
 ## careful
 
-Result: **survived** at stage 9 after 6h 14m 21s
+Result: **survived** at stage 9 after 6h 16m 42s
+Life started after 6s of clicking
 Log: 2.6 lines/min, longest gap 45 s
 
 | stage | time | first buy | pop min | pop max |
 |---|---|---|---|---|
-| 1 Primordial Soup | 19m 34s | 47s | 1,000 | 50,541 |
-| 2 Sunlight & Algae | 28m 52s | 40s | 10,000 | 298,390 |
-| 3 Many Cells Together | 25m 07s | 44s | 500 | 20,856 |
-| 4 Shells & First Fish | 42m 13s | 58s | 200 | 7,167 |
-| 5 First Land Walkers | 45m 33s | 54s | 100 | 2,490 |
-| 6 Scales & Eggs | 41m 10s | 59s | 100 | 3,145 |
-| 7 Age of Giants | 55m 22s | 1m 02s | 200 | 6,220 |
-| 8 Mammals & Birds | 1h 02m 34s | 1m 13s | 300 | 7,917 |
-| 9 Tool Users | 53m 54s | 1m 15s | 100 | 3,838 |
+| 1 Primordial Soup | 25m 51s | 52s | 0 | 39,772 |
+| 2 Sunlight & Algae | 28m 48s | 40s | 10,000 | 324,081 |
+| 3 Many Cells Together | 30m 03s | 44s | 500 | 14,599 |
+| 4 Shells & First Fish | 37m 37s | 58s | 200 | 9,508 |
+| 5 First Land Walkers | 40m 28s | 54s | 100 | 2,240 |
+| 6 Scales & Eggs | 48m 25s | 59s | 100 | 2,387 |
+| 7 Age of Giants | 50m 14s | 1m 02s | 200 | 5,735 |
+| 8 Mammals & Birds | 1h 01m 36s | 1m 13s | 300 | 8,046 |
+| 9 Tool Users | 53m 38s | 1m 15s | 100 | 3,436 |
 
-- Stage 1: minerals 666/s (all costs 652,500); heat 663/s (all costs 785,000)
-  - Stronger outer skin @ 47s, Copying recipe @ 1m 33s, Mineral pumps @ 1m 59s, Clean splitting @ 9m 07s, Heat-tough walls @ 9m 45s, Deep-water hiding @ 14m 15s, Energy store @ 19m 34s
-- Stage 2: sunlight 12,120/s (all costs 6.44 million); minerals 3,851/s (all costs 6.69 million)
-  - Green pigment @ 40s, Sun-powered food making @ 1m 27s, Floating bubbles @ 3m 04s, Protected core @ 9m 27s, Oxygen shield @ 12m 41s, Power stations @ 28m 51s
-- Stage 3: plankton 578/s (all costs 308,940); minerals 232/s (all costs 352,260)
-  - Sticky cells @ 44s, Shared jobs @ 1m 30s, Filter pores @ 2m 27s, A simple gut @ 11m 54s, Slow-down sleep @ 11m 54s, Warm-vent refuge @ 17m 46s, Nerve net @ 25m 06s
-- Stage 4: plankton 75/s (all costs 192,228); prey 103/s (all costs 195,316); shells 84/s (all costs 60,988)
-  - Simple eyes @ 58s, Hard shell @ 1m 45s, Gills @ 6m 11s, Backbone @ 19m 03s, Bigger gills @ 29m 57s, Hard armor @ 29m 58s, Steering fins @ 42m 12s
-- Stage 5: insects 130/s (all costs 77,655); water 33/s (all costs 90,514); plants 25/s (all costs 42,752)
-  - Moving neck @ 54s, Lungs @ 1m 41s, Fin-legs @ 12m 34s, Moist-skin glands @ 25m 05s, Burrowing @ 25m 05s, Sticky tongue @ 35m 12s, Air hearing @ 45m 32s
-- Stage 6: plants 49/s (all costs 98,600); water 38/s (all costs 94,400); insects 50/s (all costs 61,600)
-  - Claws @ 59s, Waterproof scales @ 1m 39s, Hard-shelled eggs @ 13m 26s, Strong lungs @ 23m 44s, Burrowing @ 23m 44s, Grinding teeth @ 28m 07s, Legs under the body @ 41m 09s
-- Stage 7: insects 90/s (all costs 208,320); seeds 72/s (all costs 242,816); water 65/s (all costs 114,688)
-  - Night eyes @ 1m 02s, Fur @ 1m 48s, Warm blood @ 19m 06s, Deep burrows @ 32m 45s, Eat-anything diet @ 32m 46s, Whiskers @ 46m 52s, Milk for babies @ 55m 22s
-- Stage 8: plants 232/s (all costs 446,400); water 120/s (all costs 453,120); prey 113/s (all costs 322,560)
-  - Grass grinding teeth @ 1m 13s, Live birth @ 2m 08s, Bigger brain @ 24m 56s, Thick fur @ 35m 31s, Migration @ 35m 31s, Hunting in packs @ 44m 14s, Grasping hands @ 1h 02m 34s
-- Stage 9: plants 81/s (all costs 185,850); water 40/s (all costs 130,900); stone 42/s (all costs 78,050)
-  - Walking upright @ 1m 15s, Stone tools @ 2m 05s, Fire @ 9m 10s, Language @ 19m 31s, Clothing @ 36m 00s, Teamwork hunting @ 36m 00s, Stories and art @ 53m 54s
+- Stage 1: minerals 513/s (all costs 652,500); heat 504/s (all costs 785,000)
+  - Stronger outer skin @ 52s, Copying recipe @ 1m 39s, Mineral pumps @ 4m 44s, Clean splitting @ 14m 15s, Heat-tough walls @ 14m 21s, Deep-water hiding @ 18m 22s, Energy store @ 25m 51s
+- Stage 2: sunlight 12,243/s (all costs 6.44 million); minerals 3,857/s (all costs 6.69 million)
+  - Green pigment @ 40s, Sun-powered food making @ 1m 27s, Floating bubbles @ 3m 02s, Protected core @ 13m 23s, Oxygen shield @ 16m 37s, Power stations @ 28m 48s
+- Stage 3: plankton 485/s (all costs 308,940); minerals 195/s (all costs 352,260)
+  - Sticky cells @ 44s, Shared jobs @ 1m 30s, Filter pores @ 5m 02s, A simple gut @ 14m 14s, Slow-down sleep @ 14m 15s, Warm-vent refuge @ 20m 47s, Nerve net @ 30m 03s
+- Stage 4: plankton 84/s (all costs 192,228); prey 117/s (all costs 195,316); shells 91/s (all costs 60,988)
+  - Simple eyes @ 58s, Hard shell @ 1m 45s, Gills @ 3m 03s, Backbone @ 15m 53s, Bigger gills @ 26m 09s, Hard armor @ 26m 10s, Steering fins @ 37m 36s
+- Stage 5: insects 131/s (all costs 77,655); water 37/s (all costs 90,514); plants 28/s (all costs 42,752)
+  - Moving neck @ 54s, Lungs @ 1m 41s, Fin-legs @ 12m 39s, Moist-skin glands @ 21m 36s, Burrowing @ 21m 37s, Sticky tongue @ 28m 08s, Air hearing @ 40m 27s
+- Stage 6: plants 42/s (all costs 98,600); water 32/s (all costs 94,400); insects 43/s (all costs 61,600)
+  - Claws @ 59s, Waterproof scales @ 1m 39s, Hard-shelled eggs @ 13m 03s, Strong lungs @ 26m 23s, Burrowing @ 26m 23s, Grinding teeth @ 31m 20s, Legs under the body @ 48m 24s
+- Stage 7: insects 94/s (all costs 208,320); seeds 80/s (all costs 242,816); water 70/s (all costs 114,688)
+  - Night eyes @ 1m 02s, Fur @ 1m 49s, Warm blood @ 16m 27s, Deep burrows @ 30m 05s, Eat-anything diet @ 30m 06s, Whiskers @ 40m 20s, Milk for babies @ 50m 14s
+- Stage 8: plants 235/s (all costs 446,400); water 122/s (all costs 453,120); prey 115/s (all costs 322,560)
+  - Grass grinding teeth @ 1m 13s, Live birth @ 2m 08s, Bigger brain @ 24m 55s, Thick fur @ 35m 30s, Migration @ 35m 31s, Hunting in packs @ 44m 04s, Grasping hands @ 1h 01m 35s
+- Stage 9: plants 84/s (all costs 185,850); water 42/s (all costs 130,900); stone 42/s (all costs 78,050)
+  - Walking upright @ 1m 15s, Stone tools @ 2m 33s, Fire @ 9m 09s, Language @ 22m 07s, Clothing @ 36m 19s, Teamwork hunting @ 36m 19s, Stories and art @ 51m 48s
 
 ## careless (never protects)
 
-Result: **extinct** at stage 1 after 19m 07s
-Log: 3.0 lines/min, longest gap 45 s
+Result: **extinct** at stage 1 after 24m 15s
+Life started after 6s of clicking
+Log: 2.9 lines/min, longest gap 45 s
 
 | stage | time | first buy | pop min | pop max |
 |---|---|---|---|---|
-| 1 Primordial Soup | 19m 07s | 47s | 1,000 | 50,541 |
+| 1 Primordial Soup | 24m 15s | 52s | 0 | 38,651 |
 
-- Stage 1: minerals 673/s (all costs 652,500); heat 599/s (all costs 785,000)
-  - Stronger outer skin @ 47s, Copying recipe @ 1m 33s, Mineral pumps @ 1m 59s, Clean splitting @ 9m 07s, Energy store @ 15m 53s
+- Stage 1: minerals 518/s (all costs 652,500); heat 461/s (all costs 785,000)
+  - Stronger outer skin @ 52s, Copying recipe @ 1m 39s, Mineral pumps @ 4m 44s, Clean splitting @ 14m 15s, Energy store @ 21m 48s

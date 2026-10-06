@@ -1,19 +1,33 @@
-import { STAGES, adaptCost, adaptMinPop } from '../data/stages'
+import { STAGES, adaptCost } from '../data/stages'
+import { canBuy, canGather, canSpark, gather, spark } from './ecology'
 import { importSave } from './save'
-import { addLog, draft, initialState } from './state'
+import { addFlag, addLog, draft, initialState } from './state'
 import { tick } from './tick'
 import type { Action, GameState } from './types'
-
-export function canBuy(s: GameState, id: string): boolean {
-  const a = STAGES[s.stage].adaptations.find(x => x.id === id)
-  if (!a || s.ending || s.owned.includes(id) || s.pop < adaptMinPop(s.stage, a)) return false
-  return Object.entries(adaptCost(s.stage, a)).every(([r, n]) => (s.store[r] ?? 0) >= n)
-}
 
 export function gameReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'TICK':
       return tick(state, action.dt)
+
+    case 'GATHER': {
+      if (!canGather(state)) return state
+      const s = draft(state)
+      gather(s)
+      if (!s.flags.includes('gathered')) {
+        addFlag(s, 'gathered')
+        addLog(s, 'You scoop up minerals and heat from around the vents. Gather enough of both and the chemicals may come together into something new.', 'story')
+      }
+      return s
+    }
+
+    case 'SPARK': {
+      if (!canSpark(state)) return state
+      const s = draft(state)
+      spark(s)
+      addLog(s, STAGES[s.stage].spark!.story, 'event')
+      return s
+    }
 
     case 'BUY_ADAPTATION': {
       if (!canBuy(state, action.id)) return state

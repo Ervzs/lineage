@@ -1,9 +1,9 @@
 // npm run balance: plays full runs with simple bots and reports pacing.
 import { writeFileSync } from 'node:fs'
 import { STAGES, adaptCost } from '../src/data/stages'
-import { perSecond } from '../src/engine/ecology'
 import { fmtInt, fmtTime } from '../src/engine/format'
-import { canBuy, gameReducer } from '../src/engine/reducer'
+import { canBuy, canSpark, perSecond } from '../src/engine/ecology'
+import { gameReducer } from '../src/engine/reducer'
 import { initialState } from '../src/engine/state'
 import type { GameState } from '../src/engine/types'
 
@@ -17,6 +17,7 @@ function plan(s: GameState) {
 const STEP = 0.5
 const MAX_TIME = 24 * 3600
 const SEED = 12345
+const CLICKS_PER_STEP = 2   // 4 clicks a second before life starts
 
 interface Policy { name: string; protects: boolean }
 const POLICIES: Policy[] = [
@@ -34,7 +35,16 @@ function run(p: Policy) {
   let lastTop = s.log[0]
   let maxGap = 0
   let lines = 0
+  let lifeAt = -1
   while (!s.ending && s.playTime < MAX_TIME) {
+    // Stage 1 opening: click until the first cell can be sparked.
+    if (s.pop === 0) {
+      for (let i = 0; i < CLICKS_PER_STEP; i++) s = gameReducer(s, { type: 'GATHER' })
+      if (canSpark(s)) {
+        s = gameReducer(s, { type: 'SPARK' })
+        lifeAt = s.playTime
+      }
+    }
     // Buy in list order; protective ones only if the policy cares.
     for (const a of plan(s)) {
       if (!p.protects && a.role === 'protect') continue
@@ -66,7 +76,7 @@ function run(p: Policy) {
     }
   }
   if (!s.ending) stages.push({ ...cur, seconds: s.stageTime })
-  return { s, stages, maxGap, linesPerMin: lines / (s.playTime / 60) }
+  return { s, stages, maxGap, linesPerMin: lines / (s.playTime / 60), lifeAt }
 }
 
 const out: string[] = ['# Balance report', '']
@@ -74,6 +84,7 @@ for (const p of POLICIES) {
   const r = run(p)
   out.push(`## ${p.name}`, '')
   out.push(`Result: **${r.s.ending ?? 'timeout'}** at stage ${r.s.stage + 1} after ${fmtTime(r.s.playTime)}`)
+  out.push(`Life started after ${fmtTime(r.lifeAt)} of clicking`)
   out.push(`Log: ${r.linesPerMin.toFixed(1)} lines/min, longest gap ${r.maxGap.toFixed(0)} s`, '')
   out.push('| stage | time | first buy | pop min | pop max |', '|---|---|---|---|---|')
   for (const st of r.stages) {

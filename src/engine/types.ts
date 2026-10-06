@@ -56,6 +56,7 @@ export interface StageDef {
   unit: string             // plural noun for the population: cells, fish, people
   about: string            // what is happening, in plain words
   evolveText: string       // logged when moving to the next stage
+  spark?: { name: string; blurb: string; story: string }   // stage starts lifeless until this is bought
   resources: ResourceDef[]
   adaptations: AdaptationDef[]
   disaster: DisasterDef
@@ -99,6 +100,8 @@ export interface GameState {
 
 export type Action =
   | { type: 'TICK'; dt: number }
+  | { type: 'GATHER' }
+  | { type: 'SPARK' }
   | { type: 'BUY_ADAPTATION'; id: string }
   | { type: 'NEW_RUN' }
   | { type: 'IMPORT_SAVE'; data: string }

@@ -5,7 +5,12 @@ export const S1: StageDef = {
   name: 'Primordial Soup',
   youAre: 'Tiny single cells, too small to see, floating in a warm ancient ocean.',
   unit: 'cells',
-  about: 'Four billion years ago there is no life on land and no oxygen in the air. Near hot vents on the sea floor, simple chemicals have joined into the first living cells. They soak up minerals and heat straight from the water and split in two to make copies of themselves.',
+  about: 'Four billion years ago the Earth is a hot, young planet. There is no life anywhere, no oxygen in the air, only a warm ocean full of chemicals. Near hot vents on the sea floor, minerals and heat mix in the water. Given enough of both, simple chemicals can join into something that copies itself: the first living cell.',
+  spark: {
+    name: 'First living cell',
+    blurb: 'Minerals and heat come together into a tiny bubble that can copy itself.',
+    story: 'Something begins to copy itself. Life has started. From now on your cells gather minerals and heat by themselves.',
+  },
   evolveText: 'Some cells have learned to catch sunlight. A new kind of life spreads toward the surface.',
   resources: [
     { id: 'minerals', name: 'Minerals', food: true },
