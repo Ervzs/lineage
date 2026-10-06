@@ -30,7 +30,6 @@ npm install
 npm run dev        # play locally
 npm run build      # production build in dist/
 npm run balance    # simulate full runs with bots and write balance-report.md
-npm run stages     # play each stage on its own and print buy times
 ```
 
 ## Tech
@@ -48,7 +47,7 @@ src/data/stages/ the 9 stages: resources, adaptations, disasters, log lines
 src/engine/    game rules: ecology, story log, disasters, saves
 src/context/   game loop and React state
 src/ui/        components
-scripts/       balance bots (npm run balance, npm run stages)
+scripts/       balance bots (npm run balance)
 ```
 
 The latest balance results are in [balance-report.md](balance-report.md).

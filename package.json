@@ -7,8 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "balance": "tsx scripts/balance.ts",
-    "stages": "tsx scripts/stages.ts"
+    "balance": "tsx scripts/balance.ts"
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.3.0",

@@ -133,25 +133,6 @@ textarea {
 
 .bar-empty { color: rgba(0, 0, 0, 0.45); }
 
-.chip {
-  padding: 1px 10px;
-  font-family: var(--mono);
-  font-weight: 400;
-  font-size: var(--fs-small);
-  color: var(--text);
-  background: rgba(0, 0, 0, 0.25);
-  clip-path: none;
-}
-
-.chip:hover:not(:disabled) { background: rgba(0, 0, 0, 0.4); }
-
-.chip-on,
-.chip-on:hover:not(:disabled) {
-  color: var(--bg);
-  background: var(--text);
-  font-weight: 700;
-}
-
 .num {
   color: var(--text);
   font-family: var(--mono);

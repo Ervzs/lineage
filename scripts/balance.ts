@@ -7,7 +7,6 @@ import { canBuy, gameReducer } from '../src/engine/reducer'
 import { initialState } from '../src/engine/state'
 import type { GameState } from '../src/engine/types'
 
-
 // Buys in list order, but once the clues start it saves for the protective adaptations first.
 function plan(s: GameState) {
   const list = STAGES[s.stage].adaptations

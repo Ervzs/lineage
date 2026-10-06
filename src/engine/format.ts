@@ -51,9 +51,3 @@ export function fmtTime(seconds: number): string {
   if (m > 0) return `${m}m ${pad(s)}s`
   return `${s}s`
 }
-
-// 08:41
-export function fmtClock(seconds: number): string {
-  const t = Math.max(0, Math.ceil(seconds))
-  return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`
-}

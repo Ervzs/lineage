@@ -14,10 +14,6 @@ import { S9 } from './s9-humans'
 
 export const STAGES: StageDef[] = [S1, S2, S3, S4, S5, S6, S7, S8, S9]
 
-export const ADAPTATIONS: Record<string, AdaptationDef> = Object.fromEntries(
-  STAGES.flatMap(st => st.adaptations.map(a => [a.id, a])),
-)
-
 // Stage data is written in base numbers; the stage scale makes later numbers bigger.
 export function resBase(k: number, r: ResourceDef) {
   const regen = (r.food ? BASE_REGEN : MAT_REGEN) * (r.size ?? 1) * STAGE_SCALE[k]
