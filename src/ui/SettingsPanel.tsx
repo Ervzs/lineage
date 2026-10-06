@@ -1,17 +1,14 @@
 import { memo, useState } from 'react'
 import { exportSave, importSave } from '../engine/save'
-import type { BuyMode, GameState } from '../engine/types'
+import type { GameState } from '../engine/types'
 
 interface Props {
   state: GameState
   onImport: (data: string) => void
   onReset: () => void
-  onMode: (m: BuyMode) => void
 }
 
-const MODES: BuyMode[] = [1, 10, 'max']
-
-export const SettingsPanel = memo(function SettingsPanel({ state, onImport, onReset, onMode }: Props) {
+export const SettingsPanel = memo(function SettingsPanel({ state, onImport, onReset }: Props) {
   const [exported, setExported] = useState('')
   const [input, setInput] = useState('')
   const [message, setMessage] = useState('')
@@ -47,17 +44,6 @@ export const SettingsPanel = memo(function SettingsPanel({ state, onImport, onRe
   return (
     <section className="panel stack settings">
       <h2 className="panel-title">Settings</h2>
-
-      <div className="stack">
-        <h3 className="section-title">default buy amount</h3>
-        <div className="row" role="group" aria-label="default buy amount">
-          {MODES.map(m => (
-            <button key={m} className={state.settings.buyMode === m ? 'chip chip-on' : 'chip'} aria-pressed={state.settings.buyMode === m} onClick={() => onMode(m)}>
-              {m}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="stack">
         <h3 className="section-title">export save</h3>
